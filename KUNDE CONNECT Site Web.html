@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUNDECONNECT - Réseau Social Officiel</title>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES ET STYLES DE BASE
+       ========================================================================== */
+    :root {
+      --kc-blue: #1877F2;
+      --kc-blue-hover: #166fe5;
+      --kc-bg: #FFFFFF;
+      --kc-card: #ffffff;
+      --kc-nav: #ffffff;
+      --kc-nav-text: #050505;
+      --kc-input-bg: #f0f2f5;
+      --kc-text: #050505;
+      --kc-text-muted: #65676b;
+      --kc-border: #e4e6eb;
+      --kc-active: #e7f3ff;
+      --kc-green: #31a24c;
+      --kc-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+      --kc-badge-gold: #eab308;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--kc-bg);
+      color: var(--kc-text);
+      overflow-x: hidden;
+      padding-top: 60px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Scrollbar personnalisée */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #bcc0c4;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+
+    /* ==========================================================================
+       SVG LOGO KUNDECONNECT AVEC MOTIFS ITURI ET BADGE VÉRIFIÉ
+       ========================================================================== */
+    .kc-logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .kc-logo-svg {
+      width: 46px;
+      height: 46px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+      transition: transform 0.2s ease;
+    }
+
+    .kc-logo-container:hover .kc-logo-svg {
+      transform: scale(1.05);
+    }
+
+    .kc-brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--kc-nav-text);
+      letter-spacing: -0.5px;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Badge Bleu Officiel Certifié */
+    .verified-badge {
+      color: #1877F2;
+      font-size: 0.88em;
+      margin-left: 4px;
+      vertical-align: middle;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .creator-badge-gold {
+      background: linear-gradient(45deg, #f59e0b, #fbbf24);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 6px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ==========================================================================
+       BARRE DE NAVIGATION SUPÉRIEURE (HEADER)
+       ========================================================================== */
+    .kc-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--kc-nav);
+      color: var(--kc-nav-text);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 1000;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .search-bar {
+      background: var(--kc-input-bg);
+      border-radius: 50px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 240px;
+      transition: width 0.3s;
+    }
+
+    .search-bar input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 14px;
+    }
+
+    .header-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 2;
+      height: 100%;
+    }
+
+    .nav-tab {
+      height: 100%;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--kc-nav-text);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      background-color: color-mix(in srgb, var(--kc-nav-text) 10%, transparent);
+      border-radius: 8px;
+    }
+
+    .nav-tab.active {
+      color: var(--kc-blue);
+      border-bottom-color: var(--kc-blue);
+    }
+
+    .nav-tab .badge-count {
+      position: absolute;
+      top: 8px;
+      right: 18px;
+      background: #e41e3f;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+      flex: 1;
+    }
+
+    .circle-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--kc-input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--kc-text);
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .circle-icon-btn:hover {
+      background: var(--kc-border);
+    }
+
+    .user-avatar-header {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    /* ==========================================================================
+       DISPOSITION PRINCIPALE ET CONTENU
+       ========================================================================== */
+    .main-wrapper {
+      display: flex;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 8px;
+    }
+
+    /* Colonne Gauche & Droite */
+    .sidebar-left,
+    .sidebar-right {
+      width: 320px;
+      position: sticky;
+      top: 76px;
+      height: calc(100vh - 90px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    /* Zone Centrale */
+    .feed-center {
+      flex: 1;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .menu-item-sidebar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      transition: background 0.2s;
+      color: var(--kc-text);
+    }
+
+    .menu-item-sidebar:hover {
+      background: var(--kc-input-bg);
+    }
+
+    .menu-item-sidebar i {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--kc-input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--kc-blue);
+      font-size: 18px;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--kc-border);
+      margin: 12px 0;
+    }
+
+    /* ==========================================================================
+      SECTION DES STATUTS
+       ========================================================================== */
+    .stories-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .story-card {
+      min-width: 110px;
+      height: 180px;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s;
+    }
+
+    .story-card:hover {
+      transform: scale(1.02);
+    }
+
+    .story-card img.bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .story-card .avatar {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 3px solid var(--kc-blue);
+      object-fit: cover;
+    }
+
+    .story-card .name {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .add-story {
+      background: var(--kc-card);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .add-story .img-top {
+      height: 120px;
+      width: 100%;
+      object-fit: cover;
+    }
+
+    .add-story .btn-add {
+      background: var(--kc-card);
+      position: relative;
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 6px;
+    }
+
+    .add-story .plus-icon {
+      position: absolute;
+      top: -18px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--kc-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid var(--kc-card);
+      font-size: 16px;
+    }
+
+    /* ==========================================================================
+       ZONE CRÉATION DE PUBLICATION
+       ========================================================================== */
+    .create-post-card {
+      background: var(--kc-card);
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      margin-bottom: 16px;
+    }
+
+    .create-post-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--kc-border);
+    }
+
+    .create-post-input {
+      background: var(--kc-input-bg);
+      border-radius: 20px;
+      padding: 10px 16px;
+      flex: 1;
+      cursor: pointer;
+      color: var(--kc-text-muted);
+      font-size: 15px;
+    }
+
+    .create-post-input:hover {
+      background: var(--kc-border);
+    }
+
+    .create-post-actions {
+      display: flex;
+      justify-content: space-around;
+      padding-top: 8px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--kc-text-muted);
+    }
+
+    .action-btn:hover {
+      background: var(--kc-input-bg);
+    }
+
+    /* ==========================================================================
+       PUBLICATIONS / POSTS
+       ========================================================================== */
+    .post-card {
+      background: var(--kc-card);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      margin-bottom: 16px;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+    }
+
+    .post-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .post-user-name {
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .post-time {
+      font-size: 12px;
+      color: var(--kc-text-muted);
+    }
+
+    .post-content {
+      padding: 0 16px 12px 16px;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .post-media {
+      width: 100%;
+      max-height: 500px;
+      object-fit: cover;
+    }
+
+    .post-stats {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 16px;
+      color: var(--kc-text-muted);
+      font-size: 13px;
+      border-bottom: 1px solid var(--kc-border);
+    }
+
+    .post-footer-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 4px 0;
+    }
+
+    /* ==========================================================================
+      FENÊTRE MODALE DE MESSAGERIE KUNDECONNECT
+       ========================================================================== */
+    .chat-modal {
+      position: fixed;
+      bottom: 0;
+      right: 80px;
+      width: 380px;
+      height: 520px;
+      background: var(--kc-card);
+      border-radius: 12px 12px 0 0;
+      box-shadow: var(--kc-shadow);
+      display: none;
+      flex-direction: column;
+      z-index: 2000;
+    }
+
+    .chat-header {
+      background: var(--kc-nav);
+      color: white;
+      padding: 12px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-header-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header-user img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    .chat-controls i {
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .chat-control,
+    .chat-footer-icons button {
+      background: transparent;
+      color: inherit;
+      padding: 4px;
+      font-size: inherit;
+    }
+
+    .chat-control:hover,
+    .chat-footer-icons button:hover {
+      opacity: 0.75;
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: var(--kc-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .msg-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .msg-received {
+      background: var(--kc-input-bg);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-sent {
+      background: var(--kc-blue);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-footer {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid var(--kc-border);
+      background: var(--kc-card);
+    }
+
+    .chat-footer input {
+      flex: 1;
+      border: none;
+      background: var(--kc-input-bg);
+      padding: 8px 12px;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .chat-footer-icons {
+      display: flex;
+      gap: 8px;
+      color: var(--kc-blue);
+      font-size: 18px;
+    }
+
+    .chat-footer-icons i {
+      cursor: pointer;
+    }
+
+    /* Modal Appels Vocaux / Vidéo */
+    .call-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .call-local-video {
+      display: none;
+      width: min(80vw, 480px);
+      max-height: 45vh;
+      margin-top: 18px;
+      background: #111;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .group-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 3500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .group-dialog {
+      width: min(100%, 420px);
+      padding: 20px;
+      background: #FFFFFF;
+      border-radius: 8px;
+      box-shadow: var(--kc-shadow);
+    }
+
+    .group-dialog h2 {
+      margin-bottom: 14px;
+      font-size: 20px;
+    }
+
+    .group-dialog input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .group-member-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      color: var(--kc-text);
+    }
+
+    .group-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .group-dialog-actions button {
+      padding: 9px 12px;
+      border-radius: 6px;
+    }
+
+    .group-submit {
+      background: var(--kc-blue);
+      color: #FFFFFF;
+    }
+
+    .inbox-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .inbox-panel {
+      display: flex;
+      flex-direction: column;
+      width: min(100%, 920px);
+      height: min(680px, 90vh);
+      min-height: 420px;
+      background: #FFFFFF;
+      border-radius: 8px;
+      box-shadow: var(--kc-shadow);
+      overflow: hidden;
+    }
+
+    .inbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid var(--kc-border);
+    }
+
+    .inbox-header h2 {
+      font-size: 21px;
+    }
+
+    .inbox-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--kc-input-bg);
+      font-size: 18px;
+    }
+
+    .inbox-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--kc-border);
+      overflow-x: auto;
+    }
+
+    .inbox-tab {
+      flex: 0 0 auto;
+      padding: 9px 12px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--kc-text-muted);
+      font-size: 14px;
+    }
+
+    .inbox-tab.active {
+      background: var(--kc-active);
+      color: var(--kc-blue);
+      font-weight: 700;
+    }
+
+    .inbox-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .inbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      background: transparent;
+      text-align: left;
+    }
+
+    .inbox-item:hover {
+      background: var(--kc-input-bg);
+    }
+
+    .inbox-open {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      background: transparent;
+      text-align: left;
+    }
+
+    .inbox-avatar {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--kc-input-bg);
+    }
+
+    .inbox-item-copy {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .inbox-item-name,
+    .inbox-item-preview {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .inbox-item-name {
+      font-weight: 700;
+    }
+
+    .inbox-item-preview {
+      margin-top: 4px;
+      color: var(--kc-text-muted);
+      font-size: 13px;
+    }
+
+    .inbox-item.unread .inbox-item-preview {
+      color: var(--kc-text);
+      font-weight: 600;
+    }
+
+    .inbox-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .inbox-favorite {
+      padding: 6px;
+      background: transparent;
+      color: var(--kc-text-muted);
+    }
+
+    .inbox-favorite.active {
+      color: #eab308;
+    }
+
+    .inbox-unread-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--kc-blue);
+    }
+
+    .inbox-empty {
+      padding: 32px 16px;
+      color: var(--kc-text-muted);
+      text-align: center;
+    }
+
+    .ai-reply-panel {
+      max-width: 620px;
+      margin: 24px auto;
+      padding: 8px;
+    }
+
+    .ai-reply-panel h3 {
+      margin-bottom: 8px;
+    }
+
+    .ai-reply-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .ai-reply-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .ai-reply-output {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--kc-input-bg);
+      line-height: 1.5;
+    }
+
+    .group-submit,
+    .auth-btn-submit,
+    .msg-sent {
+      color: var(--kc-accent-text, #FFFFFF);
+    }
+
+    @media (max-width: 600px) {
+      .inbox-modal {
+        padding: 8px;
+      }
+
+      .inbox-panel {
+        height: calc(100vh - 16px);
+        min-height: 0;
+      }
+    }
+
+    .call-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid var(--kc-blue);
+      margin-bottom: 16px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.08);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .call-actions {
+      display: flex;
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .call-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .call-end {
+      background: #e41e3f;
+      color: white;
+    }
+
+    .call-accept {
+      background: var(--kc-green);
+      color: white;
+    }
+
+    /* ==========================================================================
+       MODAL DE CONNEXION / INSCRIPTION
+       ========================================================================== */
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: color-mix(in srgb, var(--kc-bg) 95%, transparent);
+      z-index: 4000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-box {
+      background: var(--kc-card);
+      width: 400px;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: var(--kc-shadow);
+      text-align: center;
+    }
+
+    .auth-box h2 {
+      margin-bottom: 6px;
+      color: var(--kc-blue);
+    }
+
+    .auth-box,
+    .chat-header,
+    .chat-header strong {
+      color: var(--kc-text);
+    }
+
+    .kc-header .nav-tab.active,
+    .kc-header .kc-brand-title {
+      color: var(--kc-nav-text);
+    }
+
+    .chat-header {
+      color: var(--kc-nav-text);
+    }
+
+    .theme-settings {
+      margin: 18px 0 24px;
+      padding: 16px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-bg);
+    }
+
+    .theme-settings h3 {
+      margin-bottom: 6px;
+    }
+
+    .theme-settings p {
+      margin-bottom: 14px;
+      color: var(--kc-text-muted);
+      font-size: 14px;
+    }
+
+    .theme-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .theme-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--kc-text-muted);
+      font-size: 13px;
+    }
+
+    .theme-control select {
+      min-width: 220px;
+      padding: 9px 10px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .theme-control input[type="color"] {
+      width: 54px;
+      height: 40px;
+      padding: 3px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-card);
+      cursor: pointer;
+    }
+
+    .theme-swatches {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .theme-swatches span {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 50%;
+    }
+
+    .menu-item-sidebar,
+    .create-post-card,
+    .post-card,
+    .inbox-panel,
+    .group-dialog {
+      color: var(--kc-text);
+    }
+
+    .auth-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    .auth-btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--kc-blue);
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    .auth-btn-submit:hover {
+      background: var(--kc-blue-hover);
+    }
+
+    .forgot-pwd {
+      display: block;
+      margin: 12px 0;
+      color: var(--kc-blue);
+      font-size: 14px;
+    }
+
+    /* Pages Conteneurs */
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+
+      .header-center {
+        display: none;
+      }
+
+      .header-left,
+      .header-right {
+        flex: 0 1 auto;
+      }
+
+      .sidebar-left,
+      .sidebar-right {
+        display: none;
+      }
+
+      .search-bar {
+        width: 40px;
+        padding: 10px;
+      }
+
+      .search-bar input {
+        display: none;
+      }
+
+      .kc-brand-title {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kc-header {
+        gap: 8px;
+        padding: 0 8px;
+      }
+
+      .header-left {
+        min-width: 0;
+      }
+
+      .header-left .search-bar,
+      .header-right [title="Menu KundeConnect"],
+      .header-right [title="Notifications"] {
+        display: none;
+      }
+
+      .kc-logo-svg {
+        width: 36px;
+        height: 36px;
+      }
+
+      .kc-brand-title {
+        font-size: 15px;
+      }
+
+      .header-right {
+        flex: 0 0 auto;
+        gap: 4px;
+      }
+
+      .header-right .circle-icon-btn,
+      .user-avatar-header {
+        width: 34px;
+        height: 34px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==========================================================================
+       MODAL D'AUTHENTIFICATION (CONNEXION)
+       ========================================================================== -->
+  <div class="auth-overlay" id="authModal">
+    <div class="auth-box">
+      <div class="kc-logo-container" style="justify-content: center; margin-bottom: 12px;">
+        <!-- Logo KUNDECONNECT SVG -->
+        <svg class="kc-logo-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="48" fill="#1877F2" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4,2" />
+          <path d="M35 25 L35 75 M35 50 L65 25 M35 50 L65 75" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <circle cx="35" cy="50" r="4" fill="#1877F2" />
+          <circle cx="65" cy="25" r="4" fill="#1877F2" />
+          <circle cx="65" cy="75" r="4" fill="#1877F2" />
+          <g transform="translate(68, 18)">
+            <circle cx="10" cy="10" r="10" fill="#1877F2" stroke="#FFFFFF" stroke-width="1.5" />
+            <path d="M6 10 L9 13 L14 7" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+          </g>
+        </svg>
+      </div>
+      <h2 style="font-weight: 800; font-size: 24px;">KUNDECONNECT</h2>
+      <p style="color: var(--kc-text-muted); font-size: 14px; margin-bottom: 20px;">Connectez-vous pour rejoindre votre
+        communauté</p>
+
+      <form onsubmit="handleLogin(event)">
+        <input type="text" placeholder="Numéro de téléphone ou adresse e-mail" required>
+        <input type="password" placeholder="Mot de passe" required>
+        <button type="submit" class="auth-btn-submit">Se connecter</button>
+      </form>
+
+      <p style="color:var(--kc-text-muted); font-size:12px; margin-top:12px;">Mode démo local : les messages ne sont pas transmis à d’autres comptes.</p>
+      <button type="button" class="auth-btn-submit" style="background:#FFFFFF; color:var(--kc-blue); border:1px solid var(--kc-blue);" onclick="handleLogin()">Continuer en mode démo</button>
+
+      <a href="#" class="forgot-pwd" onclick="alert('Un lien de réinitialisation vous a été envoyé par SMS/Email.')">Mot
+        de passe oublié ?</a>
+      <div class="sidebar-divider"></div>
+      <button
+        style="background: var(--kc-green); color: white; padding: 10px 16px; font-weight: bold; border-radius: 6px; margin-top: 10px;"
+        onclick="handleLogin(event)">Créer un nouveau compte</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       BARRE DE NAVIGATION HAUTE (HEADER)
+       ========================================================================== -->
+  <header class="kc-header">
+    <div class="header-left">
+      <!-- Logo et Nom officiel -->
+      <div class="kc-logo-container" onclick="switchTab('feed')">
+        <svg class="kc-logo-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="48" fill="#1877F2" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4,2" />
+          <path d="M35 25 L35 75 M35 50 L65 25 M35 50 L65 75" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <circle cx="35" cy="50" r="4" fill="#1877F2" />
+          <circle cx="65" cy="25" r="4" fill="#1877F2" />
+          <circle cx="65" cy="75" r="4" fill="#1877F2" />
+          <g transform="translate(68, 18)">
+            <circle cx="10" cy="10" r="10" fill="#1877F2" stroke="#FFFFFF" stroke-width="1.5" />
+            <path d="M6 10 L9 13 L14 7" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+          </g>
+        </svg>
+        <span class="kc-brand-title">KUNDECONNECT</span>
+      </div>
+
+      <!-- Barre de recherche -->
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--kc-text-muted);"></i>
+        <input type="text" placeholder="Rechercher sur KundeConnect...">
+      </div>
+    </div>
+
+    <!-- Onglets Principaux -->
+    <div class="header-center">
+      <div class="nav-tab active" title="Accueil" onclick="switchTab('feed')">
+        <i class="fa-solid fa-house"></i>
+      </div>
+      <div class="nav-tab" title="Amis" onclick="switchTab('friends')">
+        <i class="fa-solid fa-user-group"></i>
+        <span class="badge-count">3</span>
+      </div>
+      <div class="nav-tab" title="Réels" onclick="switchTab('reels')">
+        <i class="fa-solid fa-clapperboard"></i>
+      </div>
+      <div class="nav-tab" title="Marketplace" onclick="switchTab('marketplace')">
+        <i class="fa-solid fa-store"></i>
+      </div>
+    </div>
+
+    <!-- Icônes de Droite -->
+    <div class="header-right">
+      <button type="button" class="circle-icon-btn" title="Groupes et créer un groupe" aria-label="Groupes et créer un groupe" onclick="openGroupModal()">
+        <i class="fa-solid fa-user-group"></i>
+      </button>
+      <div class="circle-icon-btn" title="Menu KundeConnect" onclick="switchTab('settings')">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="circle-icon-btn" title="Messages"
+        onclick="openInbox()">
+        <i class="fa-solid fa-comments"></i>
+        <span class="badge-count"
+          style="position:absolute; top:-2px; right:-2px; background:#e41e3f; color:white; font-size:10px; padding:2px 5px; border-radius:10px;">2</span>
+      </div>
+      <div class="circle-icon-btn" title="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="badge-count"
+          style="position:absolute; top:-2px; right:-2px; background:#e41e3f; color:white; font-size:10px; padding:2px 5px; border-radius:10px;">5</span>
+      </div>
+      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="user-avatar-header"
+        title="Votre Profil" onclick="switchTab('settings')">
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       CONTENU PRINCIPAL DE L'APPLICATION
+       ========================================================================== -->
+  <div class="main-wrapper">
+
+    <!-- COLONNE GAUCHE (MENU ACCÈS RAPIDE) -->
+    <aside class="sidebar-left">
+      <div class="menu-item-sidebar" onclick="switchTab('settings')">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
+          style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+        <span>MAKISANZA KUNDE Josué <i class="fa-solid fa-circle-check verified-badge"></i></span>
+      </div>
+      <div class="menu-item-sidebar" onclick="switchTab('friends')">
+        <i class="fa-solid fa-user-friends" style="color:#1877F2;"></i>
+        <span>Retrouver des Amis</span>
+      </div>
+      <div class="menu-item-sidebar" onclick="switchTab('reels')">
+        <i class="fa-solid fa-film" style="color:#f3425f;"></i>
+        <span>Réels & Vidéos</span>
+      </div>
+      <div class="menu-item-sidebar" onclick="switchTab('marketplace')">
+        <i class="fa-solid fa-shopping-bag" style="color:#2bcf68;"></i>
+        <span>Marketplace Ituri / Bunia</span>
+      </div>
+      <div class="menu-item-sidebar" onclick="switchTab('settings')">
+        <i class="fa-solid fa-robot" style="color:#00c6ff;"></i>
+        <span>Assistant intelligent KundeConnect</span>
+      </div>
+      <div class="menu-item-sidebar" onclick="switchTab('settings')">
+        <i class="fa-solid fa-clock-rotate-left" style="color:#1877F2;"></i>
+        <span>Souvenirs & Enregistrements</span>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="menu-item-sidebar" onclick="switchTab('settings')">
+        <i class="fa-solid fa-gear" style="color:#65676b;"></i>
+        <span>Paramètres & Confidentialité</span>
+      </div>
+    </aside>
+
+    <!-- ZONE CENTRALE DE L'APPLICATION -->
+    <main class="feed-center">
+
+      <!-- ONSGET 1: FIL D'ACTUALITÉ ACCUEIL -->
+      <section id="page-feed" class="page-section active">
+
+        <!-- Barres de statuts -->
+        <div class="stories-container">
+          <!-- Créer une story -->
+          <div class="story-card add-story">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" class="img-top">
+            <div class="btn-add">
+              <div class="plus-icon"><i class="fa-solid fa-plus"></i></div>
+              <span style="font-size:12px; font-weight:bold; color:#050505;">Créer story</span>
+            </div>
+          </div>
+          <!-- Stories d'amis synchronisés par Numéro -->
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300" class="bg">
+            <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100" class="avatar">
+            <div class="name">Grace Bunia (+243 82...)</div>
+          </div>
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300" class="bg">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100" class="avatar">
+            <div class="name">David Ituri</div>
+          </div>
+          <div class="story-card">
+            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300" class="bg">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" class="avatar">
+            <div class="name">Sarah K.</div>
+          </div>
+        </div>
+
+        <!-- Zone 'Exprimer-vous' -->
+        <div class="create-post-card">
+          <div class="create-post-top">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="post-avatar">
+            <div class="create-post-input" onclick="alert('Ouverture de l’éditeur de texte...')">
+              Quoi de neuf, MAKISANZA KUNDE Josué ?
+            </div>
+          </div>
+          <div class="create-post-actions">
+            <div class="action-btn"><i class="fa-solid fa-video" style="color:#f3425f;"></i> En direct</div>
+            <div class="action-btn"><i class="fa-solid fa-images" style="color:#45bd62;"></i> Photo/Vidéo</div>
+            <div class="action-btn"><i class="fa-solid fa-face-smile" style="color:#f7b928;"></i> Humeur</div>
+          </div>
+        </div>
+
+        <!-- Publication Certifiée Officielle du Créateur -->
+        <div class="post-card">
+          <div class="post-header">
+            <div class="post-user-info">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="post-avatar">
+              <div>
+                <div class="post-user-name">
+                  MAKISANZA KUNDE Josué
+                  <i class="fa-solid fa-circle-check verified-badge" title="Compte Officiel Vérifié"></i>
+                  <span class="creator-badge-gold">Créateur</span>
+                </div>
+                <div class="post-time">Fondateur de KundeConnect • Bunia, Ituri • <i
+                    class="fa-solid fa-earth-africa"></i></div>
+              </div>
+            </div>
+            <i class="fa-solid fa-ellipsis" style="cursor:pointer; color:var(--kc-text-muted);"></i>
+          </div>
+          <div class="post-content">
+            Bienvenue sur KUNDECONNECT ! 🚀<br>
+            Le réseau connecté de Bunia et de l’Ituri. Partagez vos statuts, vos vidéos et échangez avec vos contacts.
+          </div>
+          <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800" class="post-media">
+          <div class="post-stats">
+            <div><i class="fa-solid fa-thumbs-up" style="color:var(--kc-blue);"></i> 1.4k personnes</div>
+            <div>342 commentaires • 120 partages</div>
+          </div>
+          <div class="post-footer-actions">
+            <div class="action-btn"><i class="fa-regular fa-thumbs-up"></i> J'aime</div>
+            <div class="action-btn"><i class="fa-regular fa-comment"></i> Commenter</div>
+            <div class="action-btn"><i class="fa-solid fa-share"></i> Partager</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ONGLET 2: AMIS / RECHERCHE DE CONTACTS -->
+      <section id="page-friends" class="page-section">
+        <div class="create-post-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2>Invitations & Amis</h2>
+            <button
+              style="background:var(--kc-blue); color:white; padding:8px 16px; border-radius:6px; font-weight:bold;"
+              onclick="alert('Synchronisation avec votre répertoire téléphonique...')">
+              <i class="fa-solid fa-user-plus"></i> Ajouter des amis
+            </button>
+          </div>
+          <div class="sidebar-divider"></div>
+
+          <!-- Liste d'amis recommandés -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px;">
+            <div style="background:#f0f2f5; border-radius:8px; overflow:hidden;">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300"
+                style="width:100%; height:140px; object-fit:cover;">
+              <div style="padding:10px;">
+                <strong style="font-size:14px;">Paul Kasenyi</strong>
+                <p style="font-size:12px; color:var(--kc-text-muted);">4 amis en commun</p>
+                <button
+                  style="width:100%; background:var(--kc-blue); color:white; border-radius:6px; padding:6px; margin-top:8px; font-weight:bold;">Confirmer</button>
+              </div>
+            </div>
+            <div style="background:#f0f2f5; border-radius:8px; overflow:hidden;">
+              <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300"
+                style="width:100%; height:140px; object-fit:cover;">
+              <div style="padding:10px;">
+                <strong style="font-size:14px;">Amani Djugu</strong>
+                <p style="font-size:12px; color:var(--kc-text-muted);">12 amis en commun</p>
+                <button
+                  style="width:100%; background:var(--kc-blue); color:white; border-radius:6px; padding:6px; margin-top:8px; font-weight:bold;">Confirmer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ONGLET 3: RÉELS / VIDÉOS -->
+      <section id="page-reels" class="page-section">
+        <div class="create-post-card" style="text-align:center; padding:40px 20px;">
+          <i class="fa-solid fa-clapperboard" style="font-size:48px; color:var(--kc-blue); margin-bottom:12px;"></i>
+          <h2>KundeConnect Réels</h2>
+          <p style="color:var(--kc-text-muted);">Découvrez de courtes vidéos captivantes de la communauté de Bunia et du
+            monde entier.</p>
+        </div>
+      </section>
+
+      <!-- ONGLET 4: MARKETPLACE -->
+      <section id="page-marketplace" class="page-section">
+        <div class="create-post-card">
+          <h2>Marketplace Ituri</h2>
+          <p style="color:var(--kc-text-muted); margin-bottom:16px;">Achetez et vendez des produits localement.</p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px;">
+            <div style="background:#f0f2f5; border-radius:8px; padding:10px;">
+              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300"
+                style="width:100%; height:120px; object-fit:cover; border-radius:6px;">
+              <h4 style="margin-top:8px;">Montre Connectée</h4>
+              <p style="color:var(--kc-blue); font-weight:bold;">$45</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ONGLET 5: PARAMÈTRES KUNDECONNECT -->
+      <section id="page-settings" class="page-section">
+        <div class="create-post-card">
+          <h2 style="margin-bottom:16px;"><i class="fa-solid fa-gear"></i> Menu & Paramètres KundeConnect</h2>
+
+          <section class="theme-settings" aria-labelledby="themeSettingsTitle">
+            <h3 id="themeSettingsTitle">Personnaliser les couleurs</h3>
+            <p>Choisissez une palette ou définissez votre couleur d’accent. Le changement s’applique immédiatement.</p>
+            <div class="theme-controls">
+              <label class="theme-control" for="themeSelect">
+                Palette
+                <select id="themeSelect" onchange="selectTheme(this.value)">
+                  <option value="night">Néon & Nuit</option>
+                  <option value="warm">Chaude & Créative</option>
+                  <option value="nature">Sereine & Bien-Être</option>
+                  <option value="artistic">Artistique & Éclatante</option>
+                </select>
+              </label>
+              <label class="theme-control" for="accentColorPicker">
+                Couleur d’accent personnalisée
+                <input id="accentColorPicker" type="color" value="#1877F2" oninput="selectAccentColor(this.value)">
+              </label>
+            </div>
+            <div class="theme-swatches" aria-hidden="true">
+              <span style="background:#0B0F19;"></span><span style="background:#10B981;"></span><span style="background:#06B6D4;"></span>
+              <span style="background:#FFFBEB;"></span><span style="background:#EA580C;"></span><span style="background:#F59E0B;"></span>
+              <span style="background:#F0FDF4;"></span><span style="background:#166534;"></span><span style="background:#8B5CF6;"></span>
+              <span style="background:#F4F0FF;"></span><span style="background:#4C1D95;"></span><span style="background:#EC4899;"></span>
+            </div>
+          </section>
+
+          <!-- Groupe Général -->
+          <div style="margin-bottom:20px;">
+            <h4 style="color:var(--kc-text-muted); margin-bottom:10px;">GÉNÉRAL</h4>
+            <div class="menu-item-sidebar" onclick="switchTab('friends')"><i class="fa-solid fa-user-friends"></i>
+              Commande Amis</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-chart-line"></i> Tableau de bord professionnel</div>
+            <div class="menu-item-sidebar" style="background:#e7f3ff;"><i class="fa-solid fa-robot"
+              style="color:var(--kc-blue);"></i> Assistant intelligent KundeConnect</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-bookmark"></i> Enregistrement / Souvenirs</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-user-astronaut"></i> Avatars KundeConnect</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-rectangle-ad"></i> Espace Pubs</div>
+          </div>
+
+          <!-- Groupe Découvrir -->
+          <div style="margin-bottom:20px;">
+            <h4 style="color:var(--kc-text-muted); margin-bottom:10px;">DÉCOUVRIR ET COMMUNAUTÉ</h4>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-calendar-event"></i> Événements</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-newspaper"></i> Fils d'actualités</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-users"></i> Groupes</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-gamepad"></i> Jeux</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-store"></i> Marketplace</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-child"></i> Espace jeunes KundeConnect</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-flag"></i> Pages</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-film"></i> Reels</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-hand-holding-medical"></i> Service de crise</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-briefcase"></i> Offres d'emploi (Travails)</div>
+          </div>
+
+          <!-- Aide & Assistance -->
+          <div style="margin-bottom:20px;">
+            <h4 style="color:var(--kc-text-muted); margin-bottom:10px;">AIDE ET ASSISTANCE</h4>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-circle-question"></i> Centre d'aide</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-inbox"></i> Boîte de réception assistance</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-triangle-exclamation"></i> Signaler un problème</div>
+          </div>
+
+          <!-- Paramètres et Mises à jour -->
+          <div style="margin-bottom:20px;">
+            <h4 style="color:var(--kc-text-muted); margin-bottom:10px;">PARAMÈTRES ET CONFIDENTIALITÉ</h4>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-user-shield"></i> Centre d'espace comptes</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-arrows-rotate"></i> Commande Mises à niveau (Mises à
+              jour)</div>
+            <div class="menu-item-sidebar"><i class="fa-solid fa-cubes"></i> Autres services KundeConnect</div>
+          </div>
+
+          <div class="sidebar-divider"></div>
+          <!-- Bouton Déconnexion -->
+          <button
+            style="width:100%; background:#e41e3f; color:white; padding:12px; font-weight:bold; border-radius:8px; font-size:16px;"
+            onclick="handleLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- COLONNE DROITE (CONTACTS ET DISCUSSIONS) -->
+    <aside class="sidebar-right">
+      <h3 style="font-size:17px; color:var(--kc-text-muted); margin-bottom:12px;">Contacts & Amis en ligne</h3>
+      <button type="button" class="group-submit" style="padding:9px 12px; border-radius:6px; margin-bottom:10px;" onclick="openGroupModal()">
+        <i class="fa-solid fa-user-group"></i> Créer un groupe
+      </button>
+      <div id="groupList" aria-live="polite"></div>
+
+      <!-- Liste des amis connectés -->
+      <div class="menu-item-sidebar"
+        onclick="openChat('MAKISANZA KUNDE Josué', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100')">
+        <div style="position:relative;">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
+            style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          <div
+            style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:var(--kc-green); border-radius:50%; border:2px solid white;">
+          </div>
+        </div>
+        <span>MAKISANZA KUNDE Josué <i class="fa-solid fa-circle-check verified-badge"></i></span>
+      </div>
+
+      <div class="menu-item-sidebar"
+        onclick="openChat('Grace Bunia', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100')">
+        <div style="position:relative;">
+          <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100"
+            style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          <div
+            style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:var(--kc-green); border-radius:50%; border:2px solid white;">
+          </div>
+        </div>
+        <span>Grace Bunia</span>
+      </div>
+
+      <div class="menu-item-sidebar"
+        onclick="openChat('David Ituri', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100')">
+        <div style="position:relative;">
+          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100"
+            style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          <div
+            style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:var(--kc-green); border-radius:50%; border:2px solid white;">
+          </div>
+        </div>
+        <span>David Ituri</span>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ==========================================================================
+      FENÊTRE DE CHAT KUNDECONNECT
+       ========================================================================== -->
+  <div class="inbox-modal" id="inboxModal" role="dialog" aria-modal="true" aria-labelledby="inboxTitle">
+    <section class="inbox-panel">
+      <header class="inbox-header">
+        <h2 id="inboxTitle">Discussions</h2>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="group-submit" style="padding:9px 12px; border-radius:6px;" onclick="openGroupModal(true)">
+            <i class="fa-solid fa-user-plus"></i> Nouveau groupe
+          </button>
+          <button type="button" class="inbox-close" aria-label="Fermer les discussions" onclick="closeInbox()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </header>
+      <nav class="inbox-tabs" aria-label="Catégories des discussions">
+        <button type="button" class="inbox-tab active" data-inbox-filter="all" onclick="setInboxFilter('all')">Toutes</button>
+        <button type="button" class="inbox-tab" data-inbox-filter="unread" onclick="setInboxFilter('unread')">Non lues</button>
+        <button type="button" class="inbox-tab" data-inbox-filter="favorites" onclick="setInboxFilter('favorites')">Favoris</button>
+        <button type="button" class="inbox-tab" data-inbox-filter="groups" onclick="setInboxFilter('groups')">Groupes</button>
+        <button type="button" class="inbox-tab" data-inbox-filter="ai" onclick="setInboxFilter('ai')">Réponse IA</button>
+      </nav>
+      <div class="inbox-content" id="inboxContent" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div class="chat-modal" id="chatModal" role="dialog" aria-label="Conversation KundeConnect">
+    <div class="chat-header">
+      <div class="chat-header-user">
+        <img id="chatUserImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100">
+        <div>
+          <strong id="chatUserName" style="font-size:14px; display:block;">MAKISANZA KUNDE Josué</strong>
+          <span id="chatSubtitle" style="font-size:11px; opacity:0.8;">Conversation privée</span>
+        </div>
+      </div>
+      <div class="chat-controls">
+        <button type="button" class="chat-control" title="Appel audio" aria-label="Appel audio" onclick="startCall('audio')"><i class="fa-solid fa-phone"></i></button>
+        <button type="button" class="chat-control" title="Appel vidéo" aria-label="Appel vidéo" onclick="startCall('video')"><i class="fa-solid fa-video"></i></button>
+        <button type="button" class="chat-control" title="Fermer la conversation" aria-label="Fermer" onclick="closeChat()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <div class="chat-body" id="chatBody">
+      <div class="msg-bubble msg-received">
+        Mambo ! Bienvenue sur le tchat KundeConnect 👋
+      </div>
+      <div class="msg-bubble msg-sent">
+        Merci ! Félicitations pour l'application.
+      </div>
+    </div>
+
+    <div class="chat-footer">
+      <div class="chat-footer-icons">
+        <button type="button" title="Joindre un fichier" aria-label="Joindre un fichier" onclick="document.getElementById('chatFileInput').click()"><i class="fa-solid fa-paperclip"></i></button>
+        <button type="button" title="Envoyer une photo" aria-label="Envoyer une photo" onclick="document.getElementById('chatImageInput').click()"><i class="fa-solid fa-image"></i></button>
+      </div>
+      <input type="file" id="chatFileInput" hidden onchange="sendAttachment(event)">
+      <input type="file" id="chatImageInput" accept="image/*" hidden onchange="sendAttachment(event)">
+      <input type="text" id="chatInput" placeholder="Écrire un message..." onkeydown="handleKeyPress(event)">
+      <div class="chat-footer-icons">
+        <button type="button" id="voiceRecordButton" title="Enregistrer un message vocal" aria-label="Enregistrer un message vocal" onclick="sendVoiceNote()"><i class="fa-solid fa-microphone"></i></button>
+        <button type="button" id="videoRecordButton" title="Enregistrer une note vidéo" aria-label="Enregistrer une note vidéo" onclick="sendVideoNote()"><i class="fa-solid fa-video"></i></button>
+        <button type="button" title="Envoyer le message" aria-label="Envoyer le message" style="color:var(--kc-blue);" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-modal" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupDialogTitle">
+    <form class="group-dialog" onsubmit="createGroup(event)">
+      <h2 id="groupDialogTitle">Groupes</h2>
+      <div id="groupModalGroupList" aria-live="polite"></div>
+      <p style="margin:12px 0 8px; font-weight:600;">Créer un groupe</p>
+      <input type="text" id="groupNameInput" placeholder="Nom du groupe" required maxlength="50">
+      <p style="margin-top:14px; color:var(--kc-text-muted);">Ajouter des membres</p>
+      <label class="group-member-option"><input type="checkbox" name="groupMember" value="Grace Bunia"> Grace Bunia</label>
+      <label class="group-member-option"><input type="checkbox" name="groupMember" value="David Ituri"> David Ituri</label>
+      <label class="group-member-option"><input type="checkbox" name="groupMember" value="MAKISANZA KUNDE Josué"> MAKISANZA KUNDE Josué</label>
+      <div class="group-dialog-actions">
+        <button type="button" onclick="closeGroupModal()">Annuler</button>
+        <button type="submit" class="group-submit">Créer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DE SIMULATION D'APPEL AUDIO ET VIDÉO
+       ========================================================================== -->
+  <div class="call-modal" id="callModal">
+    <img id="callAvatarImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"
+      class="call-avatar">
+    <h2 id="callTargetName">MAKISANZA KUNDE Josué</h2>
+    <p id="callTypeLabel" style="margin-top:8px; color:#bcc0c4;">Appel audio KundeConnect en cours...</p>
+    <p id="callConnectionInfo" style="max-width:420px; margin-top:8px; color:#e4e6eb; text-align:center;">Aperçu local : aucun autre participant n'est connecté.</p>
+    <video id="callLocalVideo" class="call-local-video" autoplay muted playsinline></video>
+
+    <div class="call-actions">
+      <div class="call-btn call-end" onclick="endCall()" title="Raccrocher">
+        <i class="fa-solid fa-phone-slash"></i>
+      </div>
+      <div class="call-btn call-accept" onclick="toggleCallMicrophone()" title="Couper ou rétablir le microphone">
+        <i class="fa-solid fa-microphone" id="callMicrophoneIcon"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       LOGIQUE JAVASCRIPT
+       ========================================================================== -->
+  <script>
+    const colorPalettes = {
+      night: {
+        bg: '#0B0F19', card: '#111827', nav: '#0F172A', text: '#F9FAFB', muted: '#9CA3AF',
+        accent: '#10B981', secondary: '#06B6D4', border: '#1F2937', active: '#064E3B', input: '#1F2937'
+      },
+      warm: {
+        bg: '#FFFBEB', card: '#FFFFFF', nav: '#EA580C', text: '#431407', muted: '#78350F',
+        accent: '#F59E0B', secondary: '#9A3412', border: '#FDE68A', active: '#FEF3C7', input: '#FEF3C7'
+      },
+      nature: {
+        bg: '#F0FDF4', card: '#FFFFFF', nav: '#166534', text: '#052E16', muted: '#15803D',
+        accent: '#8B5CF6', secondary: '#22C55E', border: '#DCFCE7', active: '#EDE9FE', input: '#DCFCE7'
+      },
+      artistic: {
+        bg: '#F4F0FF', card: '#FFFFFF', nav: '#4C1D95', text: '#1E1B4B', muted: '#4338CA',
+        accent: '#EC4899', secondary: '#8B5CF6', border: '#E0E7FF', active: '#FCE7F3', input: '#E0E7FF'
+      }
+    };
+
+    function applyTheme(themeName, customAccent) {
+      const palette = colorPalettes[themeName] || colorPalettes.night;
+      const root = document.documentElement;
+      const accent = /^#[0-9a-f]{6}$/i.test(customAccent || '') ? customAccent : palette.accent;
+      root.dataset.theme = colorPalettes[themeName] ? themeName : 'night';
+      root.style.setProperty('--kc-bg', palette.bg);
+      root.style.setProperty('--kc-card', palette.card);
+      root.style.setProperty('--kc-nav', palette.nav);
+      root.style.setProperty('--kc-nav-text', '#FFFFFF');
+      root.style.setProperty('--kc-text', palette.text);
+      root.style.setProperty('--kc-text-muted', palette.muted);
+      root.style.setProperty('--kc-border', palette.border);
+      root.style.setProperty('--kc-active', palette.active);
+      root.style.setProperty('--kc-input-bg', palette.input);
+      root.style.setProperty('--kc-blue', accent);
+      root.style.setProperty('--kc-blue-hover', `color-mix(in srgb, ${accent} 82%, black)`);
+      root.style.setProperty('--kc-accent-text', getAccentTextColor(accent));
+      root.style.setProperty('--kc-green', palette.secondary);
+      root.style.setProperty('--kc-secondary', palette.secondary);
+      const themeSelect = document.getElementById('themeSelect');
+      const colorPicker = document.getElementById('accentColorPicker');
+      if (themeSelect) themeSelect.value = root.dataset.theme;
+      if (colorPicker) colorPicker.value = accent;
+    }
+
+    function selectTheme(themeName) {
+      if (!colorPalettes[themeName]) return;
+      applyTheme(themeName);
+      localStorage.setItem('kundeconnect-theme', themeName);
+      localStorage.removeItem('kundeconnect-accent');
+    }
+
+    function selectAccentColor(color) {
+      const themeName = document.documentElement.dataset.theme || 'night';
+      if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+      applyTheme(themeName, color);
+      localStorage.setItem('kundeconnect-theme', themeName);
+      localStorage.setItem('kundeconnect-accent', color);
+    }
+
+    function getAccentTextColor(hexColor) {
+      const channels = hexColor.match(/[a-f\d]{2}/gi).map(channel => parseInt(channel, 16) / 255);
+      const luminance = channels.map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+        .reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      return luminance > 0.179 ? '#111827' : '#FFFFFF';
+    }
+
+    function restoreTheme() {
+      const savedTheme = localStorage.getItem('kundeconnect-theme') || 'night';
+      const savedAccent = localStorage.getItem('kundeconnect-accent');
+      applyTheme(savedTheme, savedAccent);
+    }
+
+    restoreTheme();
+
+    // Navigation entre les onglets
+    function switchTab(tabId) {
+      document.querySelectorAll('.page-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      const targetPage = document.getElementById('page-' + tabId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+
+      // Marquer l'onglet actif si présent
+      const activeNavTab = document.querySelector(`.nav-tab[onclick*="${tabId}"]`);
+      if (activeNavTab) {
+        activeNavTab.classList.add('active');
+      }
+    }
+
+    // Gestion Authentification
+    function handleLogin(e) {
+      if (e) e.preventDefault();
+      document.getElementById('authModal').style.display = 'none';
+    }
+
+    function handleLogout() {
+      document.getElementById('authModal').style.display = 'flex';
+    }
+
+    // Gestion des conversations et des groupes
+    let currentChatUser = "";
+    let currentConversationId = "";
+    let activeRecorder = null;
+    let activeRecordingStream = null;
+    let activeCallStream = null;
+    let inboxFilter = 'all';
+    let returnToInbox = false;
+    const chatHistories = new Map();
+    const groups = [];
+    const inboxContacts = [
+      { name: 'Josué Kunde', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', unread: true, favorite: false, preview: 'Bienvenue sur KundeConnect !' },
+      { name: 'Grace Bunia', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100', unread: false, favorite: true, preview: 'À bientôt !' },
+      { name: 'David Ituri', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', unread: true, favorite: false, preview: 'Tu es disponible ?' }
+    ];
+
+    function openInbox() {
+      inboxFilter = 'all';
+      document.getElementById('inboxModal').style.display = 'flex';
+      renderInbox();
+    }
+
+    function closeInbox() {
+      document.getElementById('inboxModal').style.display = 'none';
+    }
+
+    function setInboxFilter(filter) {
+      inboxFilter = filter;
+      document.querySelectorAll('.inbox-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.inboxFilter === filter);
+      });
+      renderInbox();
+    }
+
+    function renderInbox() {
+      const content = document.getElementById('inboxContent');
+      content.replaceChildren();
+      if (inboxFilter === 'ai') {
+        content.innerHTML = '<div class="ai-reply-panel"><h3><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--kc-blue);"></i> Réponse IA</h3><p style="color:var(--kc-text-muted);">Posez une question ou rédigez un message. Cette réponse est une démonstration locale.</p><form class="ai-reply-form" onsubmit="submitAiReply(event)"><input id="aiReplyInput" type="text" placeholder="Que souhaitez-vous demander ?" required><button class="group-submit" style="padding:10px 14px; border-radius:6px;" type="submit" aria-label="Demander une réponse"><i class="fa-solid fa-paper-plane"></i></button></form><div id="aiReplyOutput" class="ai-reply-output" hidden></div></div>';
+        return;
+      }
+
+      const conversations = inboxContacts.map(contact => ({ ...contact, id: `person:${contact.name}`, type: 'person' }));
+      groups.forEach(group => conversations.push({
+        name: group.name,
+        image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=100',
+        id: `group:${group.id}`,
+        type: 'group',
+        unread: Boolean(group.unread),
+        favorite: Boolean(group.favorite),
+        preview: `${group.members.length} membre${group.members.length > 1 ? 's' : ''}`
+      }));
+      const visibleConversations = conversations.filter(conversation => {
+        if (inboxFilter === 'unread') return conversation.unread;
+        if (inboxFilter === 'favorites') return conversation.favorite;
+        if (inboxFilter === 'groups') return conversation.type === 'group';
+        return true;
+      });
+
+      if (!visibleConversations.length) {
+        const empty = document.createElement('p');
+        empty.className = 'inbox-empty';
+        empty.textContent = inboxFilter === 'groups' ? 'Aucun groupe pour le moment. Créez un groupe pour démarrer une discussion.' : 'Aucune discussion dans cette catégorie.';
+        content.appendChild(empty);
+        return;
+      }
+
+      visibleConversations.forEach(conversation => {
+        const row = document.createElement('div');
+        row.className = `inbox-item${conversation.unread ? ' unread' : ''}`;
+        const openButton = document.createElement('button');
+        openButton.type = 'button';
+        openButton.className = 'inbox-open';
+        openButton.setAttribute('aria-label', `Ouvrir la discussion ${conversation.name}`);
+        const avatar = document.createElement('img');
+        avatar.className = 'inbox-avatar';
+        avatar.src = conversation.image;
+        avatar.alt = '';
+        const copy = document.createElement('span');
+        copy.className = 'inbox-item-copy';
+        const name = document.createElement('span');
+        name.className = 'inbox-item-name';
+        name.textContent = conversation.type === 'group' ? conversation.name : conversation.name;
+        const preview = document.createElement('span');
+        preview.className = 'inbox-item-preview';
+        const history = chatHistories.get(conversation.id);
+        preview.textContent = history?.length ? history[history.length - 1].textContent.trim() : conversation.preview;
+        copy.append(name, preview);
+        openButton.append(avatar, copy);
+        openButton.addEventListener('click', () => openInboxConversation(conversation));
+
+        const actions = document.createElement('span');
+        actions.className = 'inbox-item-actions';
+        const favorite = document.createElement('button');
+        favorite.type = 'button';
+        favorite.className = `inbox-favorite${conversation.favorite ? ' active' : ''}`;
+        favorite.setAttribute('aria-label', conversation.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+        favorite.innerHTML = `<i class="fa-${conversation.favorite ? 'solid' : 'regular'} fa-star" aria-hidden="true"></i>`;
+        favorite.addEventListener('click', () => toggleConversationFavorite(conversation));
+        actions.appendChild(favorite);
+        if (conversation.unread) {
+          const unreadDot = document.createElement('span');
+          unreadDot.className = 'inbox-unread-dot';
+          unreadDot.setAttribute('aria-label', 'Non lue');
+          actions.appendChild(unreadDot);
+        }
+        row.append(openButton, actions);
+        content.appendChild(row);
+      });
+    }
+
+    function toggleConversationFavorite(conversation) {
+      const record = getConversationRecord(conversation.id);
+      if (!record) return;
+      record.favorite = !record.favorite;
+      renderInbox();
+    }
+
+    function getConversationRecord(conversationId) {
+      if (conversationId.startsWith('person:')) {
+        return inboxContacts.find(contact => `person:${contact.name}` === conversationId);
+      }
+      if (conversationId.startsWith('group:')) {
+        return groups.find(group => `group:${group.id}` === conversationId);
+      }
+      return null;
+    }
+
+    function openInboxConversation(conversation) {
+      const record = getConversationRecord(conversation.id);
+      if (record) record.unread = false;
+      returnToInbox = true;
+      closeInbox();
+      if (conversation.type === 'group') {
+        const group = groups.find(item => `group:${item.id}` === conversation.id);
+        if (group) openGroupChat(group);
+      } else {
+        openChat(conversation.name, conversation.image);
+      }
+      returnToInbox = true;
+    }
+
+    function submitAiReply(event) {
+      event.preventDefault();
+      const prompt = document.getElementById('aiReplyInput').value.trim();
+      const output = document.getElementById('aiReplyOutput');
+      output.textContent = prompt ? `Réponse de démonstration : votre demande « ${prompt} » a été reçue. La réponse IA réelle sera disponible après connexion d’un service IA.` : '';
+      output.hidden = !prompt;
+    }
+
+    function saveCurrentConversation() {
+      if (!currentConversationId) return;
+      const chatBody = document.getElementById('chatBody');
+      chatHistories.set(currentConversationId, Array.from(chatBody.children, message => message.cloneNode(true)));
+    }
+
+    function openConversation(name, image, conversationId, subtitle) {
+      saveCurrentConversation();
+      currentChatUser = name;
+      currentConversationId = conversationId;
+      document.getElementById('chatUserName').innerText = name;
+      document.getElementById('chatUserImg').src = image;
+      document.getElementById('chatSubtitle').innerText = subtitle;
+      const chatBody = document.getElementById('chatBody');
+      chatBody.replaceChildren(...(chatHistories.get(conversationId) || []));
+      document.getElementById('chatModal').style.display = 'flex';
+      document.getElementById('chatInput').focus();
+    }
+
+    function openChat(userName, userImg) {
+      openConversation(userName, userImg, `person:${userName}`, 'Conversation privée');
+    }
+
+    function openGroupChat(group) {
+      const memberNames = group.members.join(', ');
+      openConversation(group.name, '', `group:${group.id}`, `Groupe · ${memberNames}`);
+      document.getElementById('chatUserImg').src = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=100';
+    }
+
+    function closeChat() {
+      saveCurrentConversation();
+      document.getElementById('chatModal').style.display = 'none';
+      if (returnToInbox) {
+        returnToInbox = false;
+        document.getElementById('inboxModal').style.display = 'flex';
+        renderInbox();
+      }
+    }
+
+    function appendChatMessage(message) {
+      const chatBody = document.getElementById('chatBody');
+      chatBody.appendChild(message);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      saveCurrentConversation();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const message = document.createElement('div');
+      message.className = 'msg-bubble msg-sent';
+      message.textContent = text;
+      appendChatMessage(message);
+      input.value = '';
+      input.focus();
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function showChatNotice(text) {
+      const notice = document.createElement('div');
+      notice.className = 'msg-bubble msg-received';
+      notice.textContent = text;
+      appendChatMessage(notice);
+    }
+
+    async function recordMedia(kind) {
+      if (activeRecorder) {
+        if (activeRecorder.kind === kind) activeRecorder.stop();
+        else showChatNotice('Terminez l’enregistrement en cours avant d’en démarrer un autre.');
+        return;
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        showChatNotice('L’enregistrement audio/vidéo n’est pas pris en charge par ce navigateur.');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(
+          kind === 'audio' ? { audio: true } : { audio: true, video: true }
+        );
+        const recorder = new MediaRecorder(stream);
+        const chunks = [];
+        recorder.kind = kind;
+        activeRecorder = recorder;
+        activeRecordingStream = stream;
+        recorder.addEventListener('dataavailable', event => {
+          if (event.data.size) chunks.push(event.data);
+        });
+        recorder.addEventListener('stop', () => {
+          const contentType = recorder.mimeType || (kind === 'audio' ? 'audio/webm' : 'video/webm');
+          const mediaUrl = URL.createObjectURL(new Blob(chunks, { type: contentType }));
+          const message = document.createElement('div');
+          message.className = 'msg-bubble msg-sent';
+          const player = document.createElement(kind === 'audio' ? 'audio' : 'video');
+          player.controls = true;
+          player.src = mediaUrl;
+          player.style.maxWidth = '100%';
+          if (kind === 'video') player.playsInline = true;
+          message.appendChild(player);
+          appendChatMessage(message);
+          stream.getTracks().forEach(track => track.stop());
+          activeRecorder = null;
+          activeRecordingStream = null;
+          resetRecordingButtons();
+        });
+        recorder.start();
+        const button = document.getElementById(kind === 'audio' ? 'voiceRecordButton' : 'videoRecordButton');
+        button.title = 'Arrêter l’enregistrement';
+        button.setAttribute('aria-label', button.title);
+        button.style.color = '#e41e3f';
+      } catch (error) {
+        showChatNotice('Accès au microphone ou à la caméra refusé ou indisponible. Vérifiez les autorisations du navigateur.');
+      }
+    }
+
+    function resetRecordingButtons() {
+      ['voiceRecordButton', 'videoRecordButton'].forEach(id => {
+        const button = document.getElementById(id);
+        button.title = id === 'voiceRecordButton' ? 'Enregistrer un message vocal' : 'Enregistrer une note vidéo';
+        button.setAttribute('aria-label', button.title);
+        button.style.color = '';
+      });
+    }
+
+    function sendVoiceNote() {
+      recordMedia('audio');
+    }
+
+    function sendVideoNote() {
+      recordMedia('video');
+    }
+
+    function sendAttachment(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const message = document.createElement('div');
+      message.className = 'msg-bubble msg-sent';
+      const fileUrl = URL.createObjectURL(file);
+      if (file.type.startsWith('image/')) {
+        const image = document.createElement('img');
+        image.src = fileUrl;
+        image.alt = file.name;
+        image.style.maxWidth = '180px';
+        image.style.borderRadius = '8px';
+        message.appendChild(image);
+      } else {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = file.name;
+        link.textContent = file.name;
+        message.appendChild(link);
+      }
+      appendChatMessage(message);
+      event.target.value = '';
+    }
+
+    function openGroupModal(fromInbox = false) {
+      returnToInbox = fromInbox;
+      document.getElementById('groupModal').style.display = 'flex';
+      document.getElementById('groupNameInput').focus();
+    }
+
+    function closeGroupModal(preserveInboxReturn = false) {
+      document.getElementById('groupModal').style.display = 'none';
+      if (!preserveInboxReturn) returnToInbox = false;
+    }
+
+    function createGroup(event) {
+      event.preventDefault();
+      const name = document.getElementById('groupNameInput').value.trim();
+      const members = Array.from(document.querySelectorAll('input[name="groupMember"]:checked'), input => input.value);
+      if (!members.length) {
+        alert('Sélectionnez au moins un membre pour créer le groupe.');
+        return;
+      }
+
+      const group = { id: `${Date.now()}-${groups.length}`, name, members };
+      groups.push(group);
+      [document.getElementById('groupList'), document.getElementById('groupModalGroupList')].forEach(list => {
+        const groupLink = document.createElement('div');
+        groupLink.className = 'menu-item-sidebar';
+        groupLink.tabIndex = 0;
+        groupLink.setAttribute('role', 'button');
+        groupLink.innerHTML = '<i class="fa-solid fa-user-group" aria-hidden="true"></i>';
+        const groupName = document.createElement('span');
+        groupName.textContent = name;
+        groupLink.appendChild(groupName);
+        groupLink.addEventListener('click', () => {
+          closeGroupModal();
+          openGroupChat(group);
+        });
+        groupLink.addEventListener('keydown', keyEvent => {
+          if (keyEvent.key === 'Enter' || keyEvent.key === ' ') openGroupChat(group);
+        });
+        list.appendChild(groupLink);
+      });
+      document.querySelector('.group-dialog').reset();
+      closeGroupModal(true);
+      renderInbox();
+      openGroupChat(group);
+    }
+
+    // Les appels locaux testent les permissions; un service de signalisation est requis pour joindre un autre appareil.
+    async function startCall(type) {
+      const modal = document.getElementById('callModal');
+      const label = document.getElementById('callTypeLabel');
+      const info = document.getElementById('callConnectionInfo');
+      const video = document.getElementById('callLocalVideo');
+      document.getElementById('callTargetName').innerText = currentChatUser || 'MAKISANZA KUNDE Josué';
+      label.innerText = type === 'video' ? 'Activation de la caméra...' : 'Activation du microphone...';
+      info.innerText = 'Aperçu local : aucun autre participant n’est connecté.';
+      video.style.display = type === 'video' ? 'block' : 'none';
+      modal.style.display = 'flex';
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        label.innerText = 'Microphone et caméra indisponibles';
+        info.innerText = 'Ouvrez cette page dans un navigateur sécurisé pour autoriser les médias.';
+        return;
+      }
+
+      try {
+        activeCallStream = await navigator.mediaDevices.getUserMedia(
+          type === 'video' ? { audio: true, video: true } : { audio: true }
+        );
+        if (type === 'video') video.srcObject = activeCallStream;
+        label.innerText = type === 'video' ? 'Caméra activée' : 'Microphone activé';
+      } catch (error) {
+        label.innerText = 'Accès aux médias refusé ou indisponible';
+        info.innerText = 'Autorisez le microphone ou la caméra dans votre navigateur. Aucun appel réseau n’est configuré.';
+      }
+    }
+
+    function toggleCallMicrophone() {
+      if (!activeCallStream) return;
+      const audioTracks = activeCallStream.getAudioTracks();
+      const enabled = audioTracks.some(track => track.enabled);
+      audioTracks.forEach(track => { track.enabled = !enabled; });
+      document.getElementById('callMicrophoneIcon').className = enabled ? 'fa-solid fa-microphone-slash' : 'fa-solid fa-microphone';
+    }
+
+    function endCall() {
+      if (activeCallStream) activeCallStream.getTracks().forEach(track => track.stop());
+      activeCallStream = null;
+      document.getElementById('callLocalVideo').srcObject = null;
+      document.getElementById('callMicrophoneIcon').className = 'fa-solid fa-microphone';
+      document.getElementById('callModal').style.display = 'none';
+    }
+  </script>
+
+</body>
+
+</html>
