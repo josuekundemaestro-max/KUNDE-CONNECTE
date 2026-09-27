@@ -324,6 +324,77 @@
       padding-bottom: 8px;
     }
 
+    .story-card-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: inherit;
+    }
+
+    .story-card-button .story-card {
+      display: block;
+      width: 110px;
+    }
+
+    .story-card .story-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .story-create-trigger { cursor: pointer; }
+
+    .story-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 3700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.72);
+    }
+
+    .story-modal.open { display: flex; }
+
+    .story-dialog {
+      width: min(100%, 480px);
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      box-shadow: var(--kc-shadow);
+    }
+
+    .story-viewer {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: min(100%, 520px);
+      max-height: 90vh;
+      padding: 12px;
+      border-radius: 8px;
+      background: #0b0f19;
+      color: #FFFFFF;
+    }
+
+    .story-viewer-media {
+      max-width: 100%;
+      max-height: 72vh;
+      object-fit: contain;
+    }
+
+    .story-viewer-caption {
+      width: 100%;
+      padding: 10px 4px 2px;
+      overflow-wrap: anywhere;
+    }
+
     .story-card {
       min-width: 110px;
       height: 180px;
@@ -1910,27 +1981,12 @@
         <!-- Barres de statuts -->
         <div class="stories-container">
           <!-- Créer une story -->
-          <div class="story-card create-story">
+          <div class="story-card create-story story-create-trigger" role="button" tabindex="0" aria-label="Créer une story" onclick="openStoryModal()" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openStoryModal(); }">
             <img id="user-story-avatar" src="kundeimg.JPG" alt="Photo de profil pour créer une story">
             <div class="plus-icon" aria-hidden="true">+</div>
             <span>Créer story</span>
           </div>
-          <!-- Stories d'amis synchronisés par Numéro -->
-          <div class="story-card">
-            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300" class="bg">
-            <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100" class="avatar">
-            <div class="name">Grace Bunia (+243 82...)</div>
-          </div>
-          <div class="story-card">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300" class="bg">
-            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100" class="avatar">
-            <div class="name">David Ituri</div>
-          </div>
-          <div class="story-card">
-            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300" class="bg">
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" class="avatar">
-            <div class="name">Sarah K.</div>
-          </div>
+          <div id="feed-stories-container" style="display:flex; gap:8px;"></div>
         </div>
 
         <!-- Zone de création de publication -->
@@ -2238,6 +2294,30 @@
   <!-- ==========================================================================
       FENÊTRE DE CHAT KUNDECONNECT
        ========================================================================== -->
+  <div id="story-create-modal" class="story-modal" role="dialog" aria-modal="true" aria-labelledby="storyCreateTitle" onclick="if (event.target === this) closeStoryModal()">
+    <form class="story-dialog" onsubmit="createStoryFromForm(event)">
+      <div class="post-composer-heading">
+        <h2 id="storyCreateTitle">Créer une story</h2>
+        <button type="button" class="inbox-close" aria-label="Fermer la création de story" onclick="closeStoryModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <label for="story-file">Photo ou vidéo, visible pendant 24 heures</label>
+      <input class="post-file-input" type="file" id="story-file" accept="image/*,video/*" required onchange="previewStoryMedia(event)">
+      <img id="story-image-preview" class="post-media-preview" alt="Aperçu de la story">
+      <video id="story-video-preview" class="post-media-preview" controls playsinline></video>
+      <label for="story-caption" style="display:block; margin-top:12px;">Légende (facultative)</label>
+      <textarea id="story-caption" class="post-composer-text" rows="3" maxlength="500" placeholder="Ajouter une légende"></textarea>
+      <p id="storyComposerStatus" class="post-composer-status" role="status" aria-live="polite"></p>
+      <button type="submit" id="publishStoryButton" class="btn-publish">Partager la story</button>
+    </form>
+  </div>
+
+  <div id="story-viewer-modal" class="story-modal" role="dialog" aria-modal="true" aria-label="Story" onclick="if (event.target === this) closeStoryViewer()">
+    <section class="story-viewer">
+      <button type="button" class="inbox-close" style="align-self:flex-end; margin-bottom:8px;" aria-label="Fermer la story" onclick="closeStoryViewer()"><i class="fa-solid fa-xmark"></i></button>
+      <div id="story-viewer-content"></div>
+    </section>
+  </div>
+
   <div id="post-modal" class="post-composer-modal" role="dialog" aria-modal="true" aria-labelledby="postModalTitle" onclick="if (event.target === this) closePostModal()">
     <form class="post-composer-dialog" onsubmit="publishPost(event)">
       <div class="post-composer-heading">
@@ -2457,6 +2537,8 @@
     let avatarRequestId = 0;
     let currentProfileUser = null;
     let postPreviewUrl = '';
+    let storyPreviewUrl = '';
+    let feedStories = [];
 
     function setPostStatus(message, isError = false) {
       const status = document.getElementById('postComposerStatus');
@@ -2531,16 +2613,293 @@
       alert('La diffusion en direct nécessite un service de streaming configuré. Aucun direct n’est envoyé depuis cette maquette.');
     }
 
+    async function fetchPosts() {
+      if (!supabaseAuthClient) return [];
+      try {
+        const joinedResult = await supabaseAuthClient
+          .from('posts')
+          .select('*, profiles (id, username, full_name, avatar_url)')
+          .order('created_at', { ascending: false });
+        if (!joinedResult.error) return joinedResult.data || [];
+
+        console.error('Erreur Supabase posts:', joinedResult.error.message);
+        const simpleResult = await supabaseAuthClient
+          .from('posts')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (simpleResult.error) {
+          console.error('Erreur fallback posts:', simpleResult.error.message);
+          return [];
+        }
+        return simpleResult.data || [];
+      } catch (error) {
+        console.error('Erreur inattendue lors du chargement des posts:', error);
+        return [];
+      }
+    }
+
+    async function fetchStories() {
+      if (!supabaseAuthClient) return [];
+      try {
+        const joinedResult = await supabaseAuthClient
+          .from('stories')
+          .select('*, profiles (id, username, full_name, avatar_url)')
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false });
+        if (!joinedResult.error) return joinedResult.data || [];
+
+        console.error('Erreur chargement stories:', joinedResult.error.message);
+        const simpleResult = await supabaseAuthClient
+          .from('stories')
+          .select('*')
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false });
+        if (simpleResult.error) {
+          console.error('Erreur fallback stories:', simpleResult.error.message);
+          return [];
+        }
+        return simpleResult.data || [];
+      } catch (error) {
+        console.error('Erreur inattendue lors du chargement des stories:', error);
+        return [];
+      }
+    }
+
+    function getStoryAuthor(story) {
+      const profile = Array.isArray(story.profiles) ? story.profiles[0] : story.profiles;
+      if (profile?.full_name || profile?.username) return profile.full_name || profile.username;
+      if (story.user_id === currentProfileUser?.id) {
+        const metadata = currentProfileUser.user_metadata || {};
+        return [metadata.prenom, metadata.nom].filter(Boolean).join(' ') || currentProfileUser.email;
+      }
+      return 'Membre KundeConnect';
+    }
+
+    function renderFeedStories(stories) {
+      feedStories = stories;
+      const container = document.getElementById('feed-stories-container');
+      if (!container) return;
+      container.replaceChildren();
+      stories.forEach((story, index) => {
+        const profile = Array.isArray(story.profiles) ? story.profiles[0] : story.profiles;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'story-card-button';
+        button.setAttribute('aria-label', `Voir la story de ${getStoryAuthor(story)}`);
+        const card = document.createElement('span');
+        card.className = 'story-card';
+        const isVideo = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(story.media_url || '');
+        if (isVideo) {
+          const video = document.createElement('video');
+          video.className = 'story-media';
+          video.src = story.media_url;
+          video.muted = true;
+          video.playsInline = true;
+          card.appendChild(video);
+        } else {
+          const image = document.createElement('img');
+          image.className = 'story-media';
+          image.src = story.media_url;
+          image.alt = '';
+          card.appendChild(image);
+        }
+        const authorAvatar = document.createElement('img');
+        authorAvatar.className = 'avatar';
+        authorAvatar.src = profile?.avatar_url || (story.user_id === currentProfileUser?.id
+          ? currentProfileUser.user_metadata?.avatar_url || DEFAULT_AVATAR_URL
+          : DEFAULT_AVATAR_URL);
+        authorAvatar.alt = '';
+        authorAvatar.onerror = () => { authorAvatar.src = DEFAULT_AVATAR_URL; };
+        const authorName = document.createElement('span');
+        authorName.className = 'name';
+        authorName.textContent = getStoryAuthor(story);
+        card.append(authorAvatar, authorName);
+        button.appendChild(card);
+        button.addEventListener('click', () => openStoryViewer(index));
+        container.appendChild(button);
+      });
+    }
+
+    async function loadFeedStories() {
+      const container = document.getElementById('feed-stories-container');
+      if (!container || !supabaseAuthClient || !currentProfileUser) return;
+      try {
+        const stories = await fetchStories();
+        renderFeedStories(stories);
+      } catch (error) {
+        const notice = document.createElement('span');
+        notice.className = 'inbox-empty';
+        notice.textContent = 'Les stories ne sont pas disponibles. Vérifiez la table stories et ses règles d’accès Supabase.';
+        container.replaceChildren(notice);
+      }
+    }
+
+    function openStoryModal() {
+      if (!currentProfileUser || !supabaseAuthClient) {
+        setAuthStatus('Connectez-vous pour créer une story.', true);
+        return;
+      }
+      document.getElementById('storyComposerStatus').textContent = '';
+      document.getElementById('story-create-modal').classList.add('open');
+    }
+
+    function clearStoryPreview() {
+      if (storyPreviewUrl) URL.revokeObjectURL(storyPreviewUrl);
+      storyPreviewUrl = '';
+      const image = document.getElementById('story-image-preview');
+      const video = document.getElementById('story-video-preview');
+      image.removeAttribute('src');
+      video.pause();
+      video.removeAttribute('src');
+      image.style.display = 'none';
+      video.style.display = 'none';
+      video.load();
+    }
+
+    function previewStoryMedia(event) {
+      clearStoryPreview();
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!(file.type.startsWith('image/') || file.type.startsWith('video/')) || file.size > 50 * 1024 * 1024) {
+        event.target.value = '';
+        document.getElementById('storyComposerStatus').textContent = 'Choisissez une image ou une vidéo de 50 Mo maximum.';
+        return;
+      }
+      storyPreviewUrl = URL.createObjectURL(file);
+      const image = document.getElementById('story-image-preview');
+      const video = document.getElementById('story-video-preview');
+      if (file.type.startsWith('image/')) {
+        image.src = storyPreviewUrl;
+        image.style.display = 'block';
+      } else {
+        video.src = storyPreviewUrl;
+        video.style.display = 'block';
+      }
+      document.getElementById('storyComposerStatus').textContent = file.name;
+    }
+
+    function closeStoryModal() {
+      document.getElementById('story-create-modal').classList.remove('open');
+      document.getElementById('story-file').value = '';
+      document.getElementById('story-caption').value = '';
+      document.getElementById('storyComposerStatus').textContent = '';
+      clearStoryPreview();
+    }
+
+    function openStoryViewer(index) {
+      const story = feedStories[index];
+      if (!story) return;
+      const content = document.getElementById('story-viewer-content');
+      content.replaceChildren();
+      const author = document.createElement('p');
+      author.className = 'feed-post-meta';
+      author.textContent = getStoryAuthor(story);
+      const isVideo = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(story.media_url || '');
+      const media = document.createElement(isVideo ? 'video' : 'img');
+      media.className = 'story-viewer-media';
+      media.src = story.media_url;
+      if (isVideo) {
+        media.controls = true;
+        media.autoplay = true;
+        media.playsInline = true;
+      } else {
+        media.alt = `Story de ${getStoryAuthor(story)}`;
+      }
+      content.append(author, media);
+      if (story.caption) {
+        const caption = document.createElement('p');
+        caption.className = 'story-viewer-caption';
+        caption.textContent = story.caption;
+        content.appendChild(caption);
+      }
+      document.getElementById('story-viewer-modal').classList.add('open');
+    }
+
+    function closeStoryViewer() {
+      const modal = document.getElementById('story-viewer-modal');
+      const video = modal.querySelector('video');
+      if (video) video.pause();
+      modal.classList.remove('open');
+    }
+
+    async function createStory(file, caption = '') {
+      let filePath = null;
+      try {
+        if (!supabaseAuthClient) throw new Error('Client Supabase indisponible.');
+        if (!file || !(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+          throw new Error('Choisissez une image ou une vidéo valide.');
+        }
+        if (file.size > 50 * 1024 * 1024) throw new Error('La story ne peut pas dépasser 50 Mo.');
+
+        const { data: userData, error: userError } = await supabaseAuthClient.auth.getUser();
+        if (userError || !userData.user) throw new Error('Utilisateur non connecté.');
+        const user = userData.user;
+        const extension = file.name.includes('.') ? file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : 'jpg';
+        filePath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabaseAuthClient.storage.from('stories').upload(filePath, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false
+        });
+        if (uploadError) throw new Error(`Upload échoué : ${uploadError.message}`);
+
+        const { data: urlData } = supabaseAuthClient.storage.from('stories').getPublicUrl(filePath);
+        const payload = {
+          user_id: user.id,
+          media_url: urlData.publicUrl,
+          caption: caption.trim() || null,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        };
+        const { data, error } = await supabaseAuthClient.from('stories').insert([payload]).select('*');
+        if (error) throw error;
+        return { success: true, story: { ...(data?.[0] || payload), user_id: user.id } };
+      } catch (error) {
+        if (filePath) await supabaseAuthClient.storage.from('stories').remove([filePath]).catch(() => {});
+        console.error('Erreur création story:', error.message || error);
+        return { success: false, error: error.message || 'Erreur inattendue lors de la création de la story.' };
+      }
+    }
+
+    async function createStoryFromForm(event) {
+      event.preventDefault();
+      const button = document.getElementById('publishStoryButton');
+      const status = document.getElementById('storyComposerStatus');
+      const file = document.getElementById('story-file').files[0];
+      button.disabled = true;
+      status.textContent = 'Création de la story…';
+      try {
+        const result = await createStory(file, document.getElementById('story-caption').value);
+        if (!result.success) throw new Error(result.error);
+        await loadFeedStories();
+        closeStoryModal();
+      } catch (error) {
+        status.textContent = error.message || 'Impossible de créer la story. Vérifiez le bucket stories et ses règles d’accès.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
     function createPostCard(post) {
       const card = document.createElement('article');
       card.className = 'feed-post-card';
       const author = document.createElement('p');
       author.className = 'feed-post-meta';
+      const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
       const profileMetadata = post.user_id === currentProfileUser?.id ? currentProfileUser.user_metadata || {} : {};
-      const authorName = [profileMetadata.prenom, profileMetadata.nom].filter(Boolean).join(' ')
+      const authorName = profile?.full_name || profile?.username
+        || [profileMetadata.prenom, profileMetadata.nom].filter(Boolean).join(' ')
         || (post.user_id === currentProfileUser?.id ? currentProfileUser.email : 'Membre KundeConnect');
       const createdAt = post.created_at ? new Date(post.created_at) : new Date();
-      author.textContent = `${authorName}${post.mood ? ` · ${post.mood}` : ''} · ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt)}`;
+      const authorAvatar = document.createElement('img');
+      authorAvatar.className = 'post-avatar';
+      authorAvatar.src = profile?.avatar_url || (post.user_id === currentProfileUser?.id
+        ? currentProfileUser.user_metadata?.avatar_url || DEFAULT_AVATAR_URL
+        : DEFAULT_AVATAR_URL);
+      authorAvatar.alt = '';
+      authorAvatar.onerror = () => { authorAvatar.src = DEFAULT_AVATAR_URL; };
+      const authorLabel = document.createElement('span');
+      authorLabel.textContent = `${authorName}${post.mood ? ` · ${post.mood}` : ''} · ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt)}`;
+      author.append(authorAvatar, authorLabel);
       card.appendChild(author);
 
       if (post.content) {
@@ -2570,18 +2929,35 @@
       const feedContainer = document.getElementById('feed-posts-container');
       if (!feedContainer || !supabaseAuthClient || !currentProfileUser) return;
       feedContainer.replaceChildren();
-      const { data: posts, error } = await supabaseAuthClient
-        .from('posts')
-        .select('id,user_id,content,mood,media_url,created_at')
-        .order('created_at', { ascending: false });
-      if (error) {
+      try {
+        const posts = await fetchPosts();
+        posts.forEach(post => feedContainer.appendChild(createPostCard(post)));
+      } catch (error) {
         const notice = document.createElement('p');
         notice.className = 'inbox-empty';
         notice.textContent = 'Impossible de charger les publications. Vérifiez la table posts et ses règles d’accès Supabase.';
         feedContainer.appendChild(notice);
-        return;
       }
-      (posts || []).forEach(post => feedContainer.appendChild(createPostCard(post)));
+    }
+
+    async function createPost(content, mediaUrl = null, mood = null) {
+      try {
+        if (!supabaseAuthClient) throw new Error('Client Supabase indisponible.');
+        const { data: userData, error: userError } = await supabaseAuthClient.auth.getUser();
+        if (userError || !userData.user) throw new Error('Utilisateur non connecté.');
+
+        const { data, error } = await supabaseAuthClient.from('posts').insert([{
+          user_id: userData.user.id,
+          content: content || null,
+          mood: mood || null,
+          media_url: mediaUrl
+        }]).select('*');
+        if (error) throw error;
+        return { success: true, post: data?.[0] || null };
+      } catch (error) {
+        console.error('Erreur création post:', error.message || error);
+        return { success: false, error: error.message || 'Erreur inattendue lors de la création du post.' };
+      }
     }
 
     async function publishPost(event) {
@@ -2625,16 +3001,12 @@
           mediaUrl = publicUrlData.publicUrl;
         }
 
-        const { data, error } = await supabaseAuthClient.from('posts').insert({
-          user_id: currentProfileUser.id,
-          content: content || null,
-          mood: mood || null,
-          media_url: mediaUrl
-        }).select('id,user_id,content,mood,media_url,created_at').single();
-        if (error) throw new Error(`Publication impossible : ${error.message}`);
+        const result = await createPost(content, mediaUrl, mood);
+        if (!result.success) throw new Error(`Publication impossible : ${result.error}`);
+        if (!result.post) throw new Error('Supabase n’a pas renvoyé le post créé.');
 
         const feedContainer = document.getElementById('feed-posts-container');
-        feedContainer.prepend(createPostCard(data));
+        feedContainer.prepend(createPostCard(result.post));
         closePostModal();
       } catch (error) {
         if (uploadedPath) await supabaseAuthClient.storage.from('media').remove([uploadedPath]).catch(() => {});
@@ -2791,7 +3163,7 @@
       avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
-      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal, #settings-modal, #post-modal')
+      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal, #settings-modal, #post-modal, #story-create-modal, #story-viewer-modal')
         .forEach(element => { element.inert = !session; });
       updateStoryAvatar(session?.user || null);
       renderProfile(session?.user || null);
@@ -2806,6 +3178,8 @@
       switchTab('feed');
       if (window.location.hash !== '#feed') window.location.hash = 'feed';
       loadFeedPosts();
+      refreshStoryAvatar();
+      loadFeedStories();
     }
 
     function getAuthErrorMessage(error, mode) {
@@ -2880,12 +3254,9 @@
           if (session) {
             refreshStoryAvatar();
             loadFeedPosts();
+            loadFeedStories();
           }
         });
-        if (data.session) {
-          refreshStoryAvatar();
-          loadFeedPosts();
-        }
         document.getElementById('authSubmitButton').disabled = false;
       } catch (error) {
         enterAuthenticatedApp(null);
