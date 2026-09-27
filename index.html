@@ -1123,6 +1123,34 @@
       font-size: 15px;
     }
 
+    .auth-box select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      font-size: 15px;
+    }
+
+    .signup-profile-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 8px;
+    }
+
+    .signup-profile-fields[hidden],
+    #signupConfirmField[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .signup-profile-fields {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -1264,10 +1292,32 @@
         communauté</p>
 
       <form id="authForm" onsubmit="handleLogin(event)">
+        <div id="signupProfileFields" class="signup-profile-fields" hidden>
+          <label for="signupNom" class="sr-only">Nom</label>
+          <input id="signupNom" type="text" autocomplete="family-name" placeholder="Nom" maxlength="80">
+          <label for="signupPostnom" class="sr-only">Post-nom</label>
+          <input id="signupPostnom" type="text" placeholder="Post-nom" maxlength="80">
+          <label for="signupPrenom" class="sr-only">Prénom</label>
+          <input id="signupPrenom" type="text" autocomplete="given-name" placeholder="Prénom" maxlength="80">
+          <label for="signupDob" class="sr-only">Date de naissance</label>
+          <input id="signupDob" type="date" autocomplete="bday" aria-label="Date de naissance">
+          <label for="signupPob" class="sr-only">Lieu de naissance</label>
+          <input id="signupPob" type="text" placeholder="Lieu de naissance" maxlength="120">
+          <label for="signupSexe" class="sr-only">Sexe</label>
+          <select id="signupSexe" aria-label="Sélectionnez le sexe">
+            <option value="">Sélectionnez le sexe</option>
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+          </select>
+        </div>
         <label for="authEmail" class="sr-only">Adresse e-mail</label>
         <input id="authEmail" type="email" autocomplete="email" placeholder="Adresse e-mail" required>
         <label for="authPassword" class="sr-only">Mot de passe</label>
         <input id="authPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required>
+        <div id="signupConfirmField" hidden>
+          <label for="signupConfirmPassword" class="sr-only">Confirmer le mot de passe</label>
+          <input id="signupConfirmPassword" type="password" autocomplete="new-password" placeholder="Confirmer le mot de passe">
+        </div>
         <button id="authSubmitButton" type="submit" class="auth-btn-submit" disabled>Se connecter</button>
       </form>
 
@@ -1824,8 +1874,25 @@
       return error?.message || 'Supabase n’a pas pu créer ce compte. Vérifiez les informations et la configuration Email.';
     }
 
-    async function handleSignUp(email, password) {
-      const { data, error } = await supabaseAuthClient.auth.signUp({ email, password });
+    async function handleSignUp(email, password, profile) {
+      if (!supabaseAuthClient) {
+        setAuthStatus('Inscription bloquée : configurez d’abord Supabase Auth.', true);
+        return null;
+      }
+      const { data, error } = await supabaseAuthClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nom: profile.nom,
+            postnom: profile.postnom,
+            prenom: profile.prenom,
+            date_de_naissance: profile.dateDeNaissance,
+            lieu_de_naissance: profile.lieuDeNaissance,
+            sexe: profile.sexe
+          }
+        }
+      });
       if (error) {
         const message = error.message || 'Une erreur est survenue pendant la création du compte.';
         setAuthStatus(message, true);
@@ -1883,16 +1950,34 @@
       const email = document.getElementById('authEmail').value.trim().toLowerCase();
       const password = document.getElementById('authPassword').value;
       const submitButton = document.getElementById('authSubmitButton');
+      let profile = null;
+      if (authMode === 'signup') {
+        const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        if (password !== confirmPassword) {
+          const message = 'Les mots de passe ne correspondent pas.';
+          setAuthStatus(message, true);
+          alert(message);
+          return;
+        }
+        profile = {
+          nom: document.getElementById('signupNom').value.trim(),
+          postnom: document.getElementById('signupPostnom').value.trim(),
+          prenom: document.getElementById('signupPrenom').value.trim(),
+          dateDeNaissance: document.getElementById('signupDob').value,
+          lieuDeNaissance: document.getElementById('signupPob').value.trim(),
+          sexe: document.getElementById('signupSexe').value
+        };
+      }
       submitButton.disabled = true;
       setAuthStatus(authMode === 'login' ? 'Vérification du compte…' : 'Création du compte…');
       try {
         if (authMode === 'signup') {
-          const signUpData = await handleSignUp(email, password);
+          const signUpData = await handleSignUp(email, password, profile);
           if (!signUpData) return;
           if (signUpData.session) {
             enterAuthenticatedApp(signUpData.session);
             setAuthStatus('Compte créé et connecté.');
-            alert('Compte créé avec succès ! Vous êtes connecté.');
+            alert(`Inscription réussie ! Bienvenue ${profile.prenom} ${profile.nom}`);
           } else {
             toggleAuthMode();
             const message = 'Compte créé avec succès ! Consultez votre e-mail pour confirmer votre adresse, puis connectez-vous.';
@@ -1937,8 +2022,17 @@
       authMode = authMode === 'login' ? 'signup' : 'login';
       document.getElementById('authSubmitButton').textContent = authMode === 'login' ? 'Se connecter' : 'Créer le compte';
       document.getElementById('authModeButton').textContent = authMode === 'login' ? 'Créer un nouveau compte' : 'J’ai déjà un compte';
+      const profileFields = document.getElementById('signupProfileFields');
+      const confirmField = document.getElementById('signupConfirmField');
+      const isSignup = authMode === 'signup';
+      profileFields.hidden = !isSignup;
+      confirmField.hidden = !isSignup;
+      profileFields.querySelectorAll('input, select').forEach(input => { input.required = isSignup; });
+      document.getElementById('signupConfirmPassword').required = isSignup;
       document.getElementById('authPassword').autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
       document.getElementById('authPassword').minLength = authMode === 'signup' ? 8 : 1;
+      document.getElementById('signupConfirmPassword').minLength = authMode === 'signup' ? 8 : 0;
+      document.getElementById('signupDob').max = new Date().toISOString().slice(0, 10);
       setAuthStatus(authMode === 'login' ? 'Connectez-vous avec un compte déjà enregistré.' : 'Créez un compte avec une adresse e-mail valide et un mot de passe d’au moins 8 caractères.');
     }
 
