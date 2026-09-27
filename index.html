@@ -428,6 +428,9 @@
     }
 
     .create-post-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       background: var(--kc-input-bg);
       border-radius: 20px;
       padding: 10px 16px;
@@ -435,6 +438,17 @@
       cursor: pointer;
       color: var(--kc-text-muted);
       font-size: 15px;
+      text-align: left;
+    }
+
+    .create-post-input-field {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
     }
 
     .create-post-input:hover {
@@ -461,6 +475,143 @@
 
     .action-btn:hover {
       background: var(--kc-input-bg);
+    }
+
+    .post-action-btn {
+      border: 0;
+      background: transparent;
+      color: var(--kc-text-muted);
+      font: inherit;
+      font-weight: 600;
+    }
+
+    .post-action-btn.live i { color: #e11d48; }
+    .post-action-btn.media i { color: #16a34a; }
+    .post-action-btn.mood i { color: #d97706; }
+
+    .post-composer-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 3800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.48);
+    }
+
+    .post-composer-modal.open { display: flex; }
+
+    .post-composer-dialog {
+      width: min(100%, 560px);
+      max-height: min(90vh, 760px);
+      overflow-y: auto;
+      padding: 20px;
+      border-radius: 8px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      box-shadow: var(--kc-shadow);
+    }
+
+    .post-composer-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .post-composer-text {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      resize: vertical;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .post-option-section {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .post-file-input,
+    .post-mood-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .post-media-preview {
+      display: none;
+      max-width: 100%;
+      max-height: 280px;
+      margin-top: 12px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+
+    .post-composer-status {
+      min-height: 20px;
+      margin-top: 10px;
+      color: var(--kc-text-muted);
+      font-size: 13px;
+    }
+
+    .post-composer-status.error { color: #dc2626; }
+
+    .btn-publish {
+      width: 100%;
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: 6px;
+      background: var(--kc-blue);
+      color: var(--kc-accent-text, #FFFFFF);
+      font-weight: 700;
+    }
+
+    .btn-publish:disabled { opacity: 0.65; cursor: wait; }
+
+    .feed-posts-container {
+      display: grid;
+      gap: 12px;
+    }
+
+    .feed-post-card {
+      padding: 16px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+    }
+
+    .feed-post-meta {
+      margin-bottom: 10px;
+      color: var(--kc-text-muted);
+      font-size: 13px;
+    }
+
+    .feed-post-content {
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .feed-post-media {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      margin-top: 12px;
+      border-radius: 6px;
+      object-fit: contain;
+      background: #000;
     }
 
     /* ==========================================================================
@@ -1782,20 +1933,22 @@
           </div>
         </div>
 
-        <!-- Zone 'Exprimer-vous' -->
+        <!-- Zone de création de publication -->
         <div class="create-post-card">
           <div class="create-post-top">
-            <img src="kunde.JPG" class="post-avatar">
-            <div class="create-post-input" onclick="alert('Ouverture de l’éditeur de texte...')">
-              Quoi de neuf, Ir. KUNDE Josué ?
-            </div>
+            <img id="user-avatar-input" src="kundeimg.JPG" class="post-avatar" alt="">
+            <button type="button" class="create-post-input" onclick="openPostModal()">
+              <input class="create-post-input-field" type="text" placeholder="Quoi de neuf ?" readonly tabindex="-1" aria-label="Créer une publication">
+            </button>
           </div>
           <div class="create-post-actions">
-            <div class="action-btn"><i class="fa-solid fa-video" style="color:#f3425f;"></i> En direct</div>
-            <div class="action-btn"><i class="fa-solid fa-images" style="color:#45bd62;"></i> Photo/Vidéo</div>
-            <div class="action-btn"><i class="fa-solid fa-face-smile" style="color:#f7b928;"></i> Humeur</div>
+            <button type="button" class="action-btn post-action-btn live" onclick="startLive()"><i class="fa-solid fa-video"></i><span>En direct</span></button>
+            <button type="button" class="action-btn post-action-btn media" onclick="openPostModal('media')"><i class="fa-solid fa-images"></i><span>Photo/Vidéo</span></button>
+            <button type="button" class="action-btn post-action-btn mood" onclick="openPostModal('mood')"><i class="fa-solid fa-face-smile"></i><span>Humeur</span></button>
           </div>
         </div>
+
+        <div id="feed-posts-container" class="feed-posts-container" aria-live="polite"></div>
 
         <!-- Publication Certifiée Officielle du Créateur -->
         <div class="post-card">
@@ -2085,6 +2238,35 @@
   <!-- ==========================================================================
       FENÊTRE DE CHAT KUNDECONNECT
        ========================================================================== -->
+  <div id="post-modal" class="post-composer-modal" role="dialog" aria-modal="true" aria-labelledby="postModalTitle" onclick="if (event.target === this) closePostModal()">
+    <form class="post-composer-dialog" onsubmit="publishPost(event)">
+      <div class="post-composer-heading">
+        <h2 id="postModalTitle">Créer une publication</h2>
+        <button type="button" class="inbox-close" aria-label="Fermer la fenêtre de publication" onclick="closePostModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <textarea id="post-text" class="post-composer-text" rows="4" maxlength="2000" placeholder="Quoi de neuf ?"></textarea>
+      <div id="media-upload-section" class="post-option-section">
+        <label for="post-file">Photo ou vidéo</label>
+        <input class="post-file-input" type="file" id="post-file" accept="image/*,video/*" onchange="previewPostMedia(event)">
+        <img id="post-image-preview" class="post-media-preview" alt="Aperçu de l’image sélectionnée">
+        <video id="post-video-preview" class="post-media-preview" controls playsinline></video>
+      </div>
+      <div id="mood-section" class="post-option-section">
+        <label for="post-mood">Humeur / Activité</label>
+        <select id="post-mood" class="post-mood-select">
+          <option value="">Aucune</option>
+          <option value="😊 Heureux">😊 Heureux(se)</option>
+          <option value="😎 En forme">😎 En forme</option>
+          <option value="🎉 En fête">🎉 En fête</option>
+          <option value="🔥 Motivé">🔥 Motivé(e)</option>
+          <option value="🎧 En train d’écouter de la musique">🎧 En train d’écouter de la musique</option>
+        </select>
+      </div>
+      <p id="postComposerStatus" class="post-composer-status" role="status" aria-live="polite"></p>
+      <button type="submit" id="publishPostButton" class="btn-publish">Publier</button>
+    </form>
+  </div>
+
   <nav class="bottom-nav" aria-label="Navigation principale mobile">
     <button type="button" class="bottom-nav-item active" data-nav-tab="feed" aria-label="Accueil" title="Accueil" onclick="switchTab('feed')">
       <i class="fa-solid fa-house bottom-nav-icon" aria-hidden="true"></i>
@@ -2274,6 +2456,193 @@
     let authMode = 'login';
     let avatarRequestId = 0;
     let currentProfileUser = null;
+    let postPreviewUrl = '';
+
+    function setPostStatus(message, isError = false) {
+      const status = document.getElementById('postComposerStatus');
+      status.textContent = message;
+      status.classList.toggle('error', isError);
+    }
+
+    function openPostModal(option = '') {
+      if (!currentProfileUser || !supabaseAuthClient) {
+        setAuthStatus('Connectez-vous pour publier une mise à jour.', true);
+        return;
+      }
+      const modal = document.getElementById('post-modal');
+      modal.classList.add('open');
+      setPostStatus('');
+      if (option === 'media') document.getElementById('post-file').focus();
+      else if (option === 'mood') document.getElementById('post-mood').focus();
+      else document.getElementById('post-text').focus();
+    }
+
+    function clearPostPreview() {
+      if (postPreviewUrl) URL.revokeObjectURL(postPreviewUrl);
+      postPreviewUrl = '';
+      const imagePreview = document.getElementById('post-image-preview');
+      const videoPreview = document.getElementById('post-video-preview');
+      imagePreview.removeAttribute('src');
+      videoPreview.pause();
+      videoPreview.removeAttribute('src');
+      imagePreview.style.display = 'none';
+      videoPreview.style.display = 'none';
+      videoPreview.load();
+    }
+
+    function previewPostMedia(event) {
+      clearPostPreview();
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        event.target.value = '';
+        setPostStatus('Choisissez un fichier image ou vidéo.', true);
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        event.target.value = '';
+        setPostStatus('Le fichier ne peut pas dépasser 50 Mo.', true);
+        return;
+      }
+
+      postPreviewUrl = URL.createObjectURL(file);
+      if (file.type.startsWith('image/')) {
+        const preview = document.getElementById('post-image-preview');
+        preview.src = postPreviewUrl;
+        preview.style.display = 'block';
+      } else {
+        const preview = document.getElementById('post-video-preview');
+        preview.src = postPreviewUrl;
+        preview.style.display = 'block';
+      }
+      setPostStatus(file.name);
+    }
+
+    function closePostModal() {
+      document.getElementById('post-modal').classList.remove('open');
+      document.getElementById('post-text').value = '';
+      document.getElementById('post-file').value = '';
+      document.getElementById('post-mood').value = '';
+      setPostStatus('');
+      clearPostPreview();
+    }
+
+    function startLive() {
+      alert('La diffusion en direct nécessite un service de streaming configuré. Aucun direct n’est envoyé depuis cette maquette.');
+    }
+
+    function createPostCard(post) {
+      const card = document.createElement('article');
+      card.className = 'feed-post-card';
+      const author = document.createElement('p');
+      author.className = 'feed-post-meta';
+      const profileMetadata = post.user_id === currentProfileUser?.id ? currentProfileUser.user_metadata || {} : {};
+      const authorName = [profileMetadata.prenom, profileMetadata.nom].filter(Boolean).join(' ')
+        || (post.user_id === currentProfileUser?.id ? currentProfileUser.email : 'Membre KundeConnect');
+      const createdAt = post.created_at ? new Date(post.created_at) : new Date();
+      author.textContent = `${authorName}${post.mood ? ` · ${post.mood}` : ''} · ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt)}`;
+      card.appendChild(author);
+
+      if (post.content) {
+        const content = document.createElement('p');
+        content.className = 'feed-post-content';
+        content.textContent = post.content;
+        card.appendChild(content);
+      }
+
+      if (post.media_url) {
+        const isVideo = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(post.media_url);
+        const media = document.createElement(isVideo ? 'video' : 'img');
+        media.className = 'feed-post-media';
+        media.src = post.media_url;
+        if (isVideo) {
+          media.controls = true;
+          media.playsInline = true;
+        } else {
+          media.alt = 'Média de la publication';
+        }
+        card.appendChild(media);
+      }
+      return card;
+    }
+
+    async function loadFeedPosts() {
+      const feedContainer = document.getElementById('feed-posts-container');
+      if (!feedContainer || !supabaseAuthClient || !currentProfileUser) return;
+      feedContainer.replaceChildren();
+      const { data: posts, error } = await supabaseAuthClient
+        .from('posts')
+        .select('id,user_id,content,mood,media_url,created_at')
+        .order('created_at', { ascending: false });
+      if (error) {
+        const notice = document.createElement('p');
+        notice.className = 'inbox-empty';
+        notice.textContent = 'Impossible de charger les publications. Vérifiez la table posts et ses règles d’accès Supabase.';
+        feedContainer.appendChild(notice);
+        return;
+      }
+      (posts || []).forEach(post => feedContainer.appendChild(createPostCard(post)));
+    }
+
+    async function publishPost(event) {
+      event.preventDefault();
+      if (!currentProfileUser || !supabaseAuthClient) {
+        setPostStatus('Votre session a expiré. Reconnectez-vous avant de publier.', true);
+        return;
+      }
+
+      const content = document.getElementById('post-text').value.trim();
+      const mood = document.getElementById('post-mood').value;
+      const file = document.getElementById('post-file').files[0];
+      if (!content && !file && !mood) {
+        setPostStatus('Ajoutez du texte, une photo/vidéo ou une humeur avant de publier.', true);
+        return;
+      }
+      if (file && !(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        setPostStatus('Le fichier doit être une image ou une vidéo.', true);
+        return;
+      }
+      if (file && file.size > 50 * 1024 * 1024) {
+        setPostStatus('Le fichier ne peut pas dépasser 50 Mo.', true);
+        return;
+      }
+
+      const publishButton = document.getElementById('publishPostButton');
+      publishButton.disabled = true;
+      setPostStatus('Publication en cours…');
+      let uploadedPath = null;
+      try {
+        let mediaUrl = null;
+        if (file) {
+          const extension = file.name.includes('.') ? file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : 'bin';
+          uploadedPath = `posts/${currentProfileUser.id}/${crypto.randomUUID()}.${extension}`;
+          const { error: uploadError } = await supabaseAuthClient.storage.from('media').upload(uploadedPath, file, {
+            contentType: file.type,
+            upsert: false
+          });
+          if (uploadError) throw new Error(`Téléversement impossible : ${uploadError.message}`);
+          const { data: publicUrlData } = supabaseAuthClient.storage.from('media').getPublicUrl(uploadedPath);
+          mediaUrl = publicUrlData.publicUrl;
+        }
+
+        const { data, error } = await supabaseAuthClient.from('posts').insert({
+          user_id: currentProfileUser.id,
+          content: content || null,
+          mood: mood || null,
+          media_url: mediaUrl
+        }).select('id,user_id,content,mood,media_url,created_at').single();
+        if (error) throw new Error(`Publication impossible : ${error.message}`);
+
+        const feedContainer = document.getElementById('feed-posts-container');
+        feedContainer.prepend(createPostCard(data));
+        closePostModal();
+      } catch (error) {
+        if (uploadedPath) await supabaseAuthClient.storage.from('media').remove([uploadedPath]).catch(() => {});
+        setPostStatus(error.message || 'Impossible de publier. Vérifiez la configuration Supabase.', true);
+      } finally {
+        publishButton.disabled = false;
+      }
+    }
 
     function switchProfileTab(tabName) {
       document.querySelectorAll('.profile-tab-button').forEach(button => {
@@ -2385,7 +2754,7 @@
         safeAvatarUrl = DEFAULT_AVATAR_URL;
       }
 
-      ['user-story-avatar', 'user-header-avatar', 'nav-user-avatar'].forEach(id => {
+      ['user-story-avatar', 'user-header-avatar', 'nav-user-avatar', 'user-avatar-input'].forEach(id => {
         const image = document.getElementById(id);
         if (!image) return;
         image.onerror = () => {
@@ -2422,7 +2791,7 @@
       avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
-      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal, #settings-modal')
+      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal, #settings-modal, #post-modal')
         .forEach(element => { element.inert = !session; });
       updateStoryAvatar(session?.user || null);
       renderProfile(session?.user || null);
@@ -2436,6 +2805,7 @@
       setAuthenticated(session);
       switchTab('feed');
       if (window.location.hash !== '#feed') window.location.hash = 'feed';
+      loadFeedPosts();
     }
 
     function getAuthErrorMessage(error, mode) {
@@ -2507,9 +2877,15 @@
         setAuthStatus(data.session ? `Connecté : ${data.session.user.email}` : 'Connectez-vous avec un compte KundeConnect enregistré.');
         supabaseAuthClient.auth.onAuthStateChange((_event, session) => {
           setAuthenticated(session);
-          if (session) refreshStoryAvatar();
+          if (session) {
+            refreshStoryAvatar();
+            loadFeedPosts();
+          }
         });
-        if (data.session) refreshStoryAvatar();
+        if (data.session) {
+          refreshStoryAvatar();
+          loadFeedPosts();
+        }
         document.getElementById('authSubmitButton').disabled = false;
       } catch (error) {
         enterAuthenticatedApp(null);
