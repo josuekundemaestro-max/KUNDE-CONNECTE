@@ -701,6 +701,10 @@
       color: var(--kc-text);
     }
 
+    .bottom-nav {
+      display: none;
+    }
+
     /* ==========================================================================
       FENÊTRE MODALE DE MESSAGERIE KUNDECONNECT
        ========================================================================== */
@@ -1395,6 +1399,85 @@
       .kc-brand-title {
         font-size: 18px;
       }
+
+      body {
+        padding-bottom: 90px;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        right: 50%;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 1100;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        width: min(94vw, 520px);
+        min-height: 58px;
+        padding: 6px 10px;
+        transform: translateX(50%);
+        border: 1px solid var(--kc-border);
+        border-radius: 18px;
+        background: var(--kc-nav);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.24);
+      }
+
+      .bottom-nav-item {
+        position: relative;
+        display: flex;
+        flex: 1 1 0;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 44px;
+        padding: 6px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: var(--kc-text-muted);
+        text-decoration: none;
+      }
+
+      .bottom-nav-item.active {
+        background: var(--kc-active);
+        color: var(--kc-blue);
+      }
+
+      .bottom-nav-item:focus-visible {
+        outline: 2px solid var(--kc-blue);
+        outline-offset: 2px;
+      }
+
+      .bottom-nav-icon {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+      }
+
+      .bottom-nav-profile-avatar {
+        width: 30px;
+        height: 30px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .bottom-nav-badge {
+        position: absolute;
+        top: 1px;
+        right: calc(50% - 21px);
+        min-width: 17px;
+        height: 17px;
+        padding: 1px 4px;
+        border: 2px solid var(--kc-nav);
+        border-radius: 10px;
+        background: #e53e3e;
+        color: #FFFFFF;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 12px;
+        text-align: center;
+      }
     }
 
     @media (max-width: 600px) {
@@ -1943,6 +2026,38 @@
   <!-- ==========================================================================
       FENÊTRE DE CHAT KUNDECONNECT
        ========================================================================== -->
+  <nav class="bottom-nav" aria-label="Navigation principale mobile">
+    <button type="button" class="bottom-nav-item active" data-nav-tab="feed" aria-label="Accueil" title="Accueil" onclick="switchTab('feed')">
+      <i class="fa-solid fa-house bottom-nav-icon" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="bottom-nav-item" data-nav-tab="reels" aria-label="Reels" title="Reels" onclick="switchTab('reels')">
+      <i class="fa-solid fa-clapperboard bottom-nav-icon" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="bottom-nav-item" data-nav-tab="friends" aria-label="Amis, 1 demande" title="Amis" onclick="switchTab('friends')">
+      <i class="fa-solid fa-user-group bottom-nav-icon" aria-hidden="true"></i>
+      <span class="bottom-nav-badge" aria-hidden="true">1</span>
+    </button>
+    <button type="button" class="bottom-nav-item" data-nav-tab="marketplace" aria-label="Marketplace" title="Marketplace" onclick="switchTab('marketplace')">
+      <i class="fa-solid fa-store bottom-nav-icon" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="bottom-nav-item" data-nav-action="notifications" aria-label="Notifications" title="Notifications" onclick="openNotifications()">
+      <i class="fa-solid fa-bell bottom-nav-icon" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="bottom-nav-item" data-nav-tab="profile" aria-label="Profil" title="Profil" onclick="switchTab('profile')">
+      <img id="nav-user-avatar" src="kundeimg.JPG" alt="" class="bottom-nav-profile-avatar">
+    </button>
+  </nav>
+
+  <div class="inbox-modal" id="notificationsModal" role="dialog" aria-modal="true" aria-labelledby="notificationsTitle" onclick="if (event.target === this) closeNotifications()">
+    <section class="inbox-panel" style="width:min(100%, 520px); height:auto; min-height:0;">
+      <header class="inbox-header">
+        <h2 id="notificationsTitle">Notifications</h2>
+        <button type="button" class="inbox-close" aria-label="Fermer les notifications" onclick="closeNotifications()"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <p class="inbox-empty">Aucune nouvelle notification.</p>
+    </section>
+  </div>
+
   <div class="inbox-modal" id="inboxModal" role="dialog" aria-modal="true" aria-labelledby="inboxTitle">
     <section class="inbox-panel">
       <header class="inbox-header">
@@ -2181,7 +2296,7 @@
         safeAvatarUrl = DEFAULT_AVATAR_URL;
       }
 
-      ['user-story-avatar', 'user-header-avatar'].forEach(id => {
+      ['user-story-avatar', 'user-header-avatar', 'nav-user-avatar'].forEach(id => {
         const image = document.getElementById(id);
         if (!image) return;
         image.onerror = () => {
@@ -2218,7 +2333,7 @@
       avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
-      document.querySelectorAll('.kc-header, .main-wrapper, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal')
+      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal')
         .forEach(element => { element.inert = !session; });
       updateStoryAvatar(session?.user || null);
       renderProfile(session?.user || null);
@@ -2533,6 +2648,19 @@
       if (activeNavTab) {
         activeNavTab.classList.add('active');
       }
+      document.querySelectorAll('.bottom-nav-item[data-nav-tab]').forEach(item => {
+        item.classList.toggle('active', item.dataset.navTab === tabId);
+      });
+      closeNotifications();
+    }
+
+    function openNotifications() {
+      document.getElementById('notificationsModal').style.display = 'flex';
+    }
+
+    function closeNotifications() {
+      const modal = document.getElementById('notificationsModal');
+      if (modal) modal.style.display = 'none';
     }
 
     // Gestion des conversations et des groupes
