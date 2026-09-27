@@ -367,41 +367,44 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
 
-    .add-story {
+    .create-story {
       background: var(--kc-card);
       display: flex;
       flex-direction: column;
     }
 
-    .add-story .img-top {
+    .create-story > img {
       height: 120px;
       width: 100%;
       object-fit: cover;
     }
 
-    .add-story .btn-add {
-      background: var(--kc-card);
-      position: relative;
+    .create-story > span {
       height: 60px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
+      align-items: flex-end;
+      justify-content: center;
       padding-bottom: 6px;
+      color: var(--kc-text);
+      font-size: 12px;
+      font-weight: 700;
     }
 
-    .add-story .plus-icon {
-      position: absolute;
-      top: -18px;
+    .create-story .plus-icon {
+      position: relative;
+      z-index: 1;
+      align-self: center;
+      flex: 0 0 32px;
       width: 32px;
       height: 32px;
+      margin: -18px 0 -18px;
+      border: 3px solid var(--kc-card);
       border-radius: 50%;
       background: var(--kc-blue);
-      color: white;
+      color: var(--kc-accent-text, #FFFFFF);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 3px solid var(--kc-card);
       font-size: 16px;
     }
 
@@ -1397,7 +1400,7 @@
         <span class="badge-count"
           style="position:absolute; top:-2px; right:-2px; background:#e41e3f; color:white; font-size:10px; padding:2px 5px; border-radius:10px;">5</span>
       </div>
-      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="user-avatar-header"
+      <img id="user-header-avatar" src="kundeimg.JPG" class="user-avatar-header"
         title="Votre Profil" onclick="switchTab('settings')">
     </div>
   </header>
@@ -1450,12 +1453,10 @@
         <!-- Barres de statuts -->
         <div class="stories-container">
           <!-- Créer une story -->
-          <div class="story-card add-story">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" class="img-top">
-            <div class="btn-add">
-              <div class="plus-icon"><i class="fa-solid fa-plus"></i></div>
-              <span style="font-size:12px; font-weight:bold; color:#050505;">Créer story</span>
-            </div>
+          <div class="story-card create-story">
+            <img id="user-story-avatar" src="kundeimg.JPG" alt="Photo de profil pour créer une story">
+            <div class="plus-icon" aria-hidden="true">+</div>
+            <span>Créer story</span>
           </div>
           <!-- Stories d'amis synchronisés par Numéro -->
           <div class="story-card">
@@ -1838,8 +1839,49 @@
     // Use the Supabase project URL and publishable/anon key only; never expose a service_role key here.
     const SUPABASE_URL = 'https://dspjajlxgdhkfcejmqvq.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_U7X5ki0dEqG7fMFEIdn_-w_Yp0wWQZ_';
+    const DEFAULT_AVATAR_URL = 'kundeimg.JPG';
     let supabaseAuthClient = null;
     let authMode = 'login';
+    let avatarRequestId = 0;
+
+    function updateStoryAvatar(user) {
+      const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || DEFAULT_AVATAR_URL;
+      let safeAvatarUrl = DEFAULT_AVATAR_URL;
+      try {
+        const parsedUrl = new URL(avatarUrl, window.location.href);
+        if (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:' || avatarUrl === DEFAULT_AVATAR_URL) {
+          safeAvatarUrl = avatarUrl;
+        }
+      } catch (error) {
+        safeAvatarUrl = DEFAULT_AVATAR_URL;
+      }
+
+      ['user-story-avatar', 'user-header-avatar'].forEach(id => {
+        const image = document.getElementById(id);
+        if (!image) return;
+        image.onerror = () => {
+          image.onerror = null;
+          image.src = DEFAULT_AVATAR_URL;
+        };
+        image.src = safeAvatarUrl;
+      });
+    }
+
+    async function refreshStoryAvatar() {
+      const requestId = ++avatarRequestId;
+      if (!supabaseAuthClient || document.body.dataset.authenticated !== 'true') {
+        updateStoryAvatar(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseAuthClient.auth.getUser();
+        if (requestId !== avatarRequestId) return;
+        updateStoryAvatar(error ? null : data.user);
+      } catch (error) {
+        if (requestId === avatarRequestId) updateStoryAvatar(null);
+      }
+    }
 
     function setAuthStatus(message, isError = false) {
       const status = document.getElementById('authStatus');
@@ -1848,10 +1890,12 @@
     }
 
     function setAuthenticated(session) {
+      avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
       document.querySelectorAll('.kc-header, .main-wrapper, #inboxModal, #chatModal, #groupModal, #callModal')
         .forEach(element => { element.inert = !session; });
+      updateStoryAvatar(session?.user || null);
     }
 
     function enterAuthenticatedApp(session) {
@@ -1931,7 +1975,11 @@
         if (error) throw error;
         enterAuthenticatedApp(data.session);
         setAuthStatus(data.session ? `Connecté : ${data.session.user.email}` : 'Connectez-vous avec un compte KundeConnect enregistré.');
-        supabaseAuthClient.auth.onAuthStateChange((_event, session) => setAuthenticated(session));
+        supabaseAuthClient.auth.onAuthStateChange((_event, session) => {
+          setAuthenticated(session);
+          if (session) refreshStoryAvatar();
+        });
+        if (data.session) refreshStoryAvatar();
         document.getElementById('authSubmitButton').disabled = false;
       } catch (error) {
         enterAuthenticatedApp(null);
@@ -1976,6 +2024,7 @@
           if (!signUpData) return;
           if (signUpData.session) {
             enterAuthenticatedApp(signUpData.session);
+            refreshStoryAvatar();
             setAuthStatus('Compte créé et connecté.');
             alert(`Inscription réussie ! Bienvenue ${profile.prenom} ${profile.nom}`);
           } else {
@@ -2003,6 +2052,7 @@
           return;
         }
         enterAuthenticatedApp(data.session);
+        refreshStoryAvatar();
         setAuthStatus('Connexion réussie.');
       } catch (error) {
         enterAuthenticatedApp(null);
