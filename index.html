@@ -1824,6 +1824,17 @@
       return error?.message || 'Supabase n’a pas pu créer ce compte. Vérifiez les informations et la configuration Email.';
     }
 
+    async function handleSignUp(email, password) {
+      const { data, error } = await supabaseAuthClient.auth.signUp({ email, password });
+      if (error) {
+        const message = error.message || 'Une erreur est survenue pendant la création du compte.';
+        setAuthStatus(message, true);
+        alert(`Erreur lors de l'inscription : ${message}`);
+        return null;
+      }
+      return data;
+    }
+
     async function initializeAuth() {
       const isConfigured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL)
         && !SUPABASE_URL.includes('YOUR_PROJECT_ID')
@@ -1876,14 +1887,17 @@
       setAuthStatus(authMode === 'login' ? 'Vérification du compte…' : 'Création du compte…');
       try {
         if (authMode === 'signup') {
-          const { data, error } = await supabaseAuthClient.auth.signUp({ email, password });
-          if (error) throw error;
-          if (data.session) {
-            enterAuthenticatedApp(data.session);
+          const signUpData = await handleSignUp(email, password);
+          if (!signUpData) return;
+          if (signUpData.session) {
+            enterAuthenticatedApp(signUpData.session);
             setAuthStatus('Compte créé et connecté.');
+            alert('Compte créé avec succès ! Vous êtes connecté.');
           } else {
             toggleAuthMode();
-            setAuthStatus('Inscription enregistrée. Consultez votre e-mail pour confirmer le compte avant de vous connecter.');
+            const message = 'Compte créé avec succès ! Consultez votre e-mail pour confirmer votre adresse, puis connectez-vous.';
+            setAuthStatus(message);
+            alert(message);
           }
           return;
         }
@@ -1909,7 +1923,7 @@
         enterAuthenticatedApp(null);
         const message = getAuthErrorMessage(error, authMode);
         setAuthStatus(message, true);
-        if (authMode === 'login') alert(`Erreur de connexion : ${message}`);
+        alert(authMode === 'login' ? `Erreur de connexion : ${message}` : `Erreur lors de l'inscription : ${message}`);
       } finally {
         submitButton.disabled = !supabaseAuthClient;
       }
