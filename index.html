@@ -1,3 +1,44 @@
+    async function loadPostEngagement(posts) {
+      const postIds = posts.map(post => post.id).filter(Boolean);
+      if (!postIds.length || !supabaseAuthClient) return;
+      const [likesResult, commentsResult, sharesResult] = await Promise.all([
+        supabaseAuthClient.from('post_likes').select('post_id, user_id').in('post_id', postIds),
+        supabaseAuthClient.from('post_comments').select('post_id').in('post_id', postIds),
+        supabaseAuthClient.from('post_shares').select('post_id').in('post_id', postIds)
+      ]);
+      const errors = [likesResult.error, commentsResult.error, sharesResult.error].filter(Boolean);
+      if (errors.length) {
+        console.error('Impossible de charger les réactions des publications:', errors[0].message);
+        return;
+      }
+
+      const likesByPost = new Map();
+      const commentsByPost = new Map();
+      const sharesByPost = new Map();
+      (likesResult.data || []).forEach(like => {
+        const likes = likesByPost.get(like.post_id) || [];
+        likes.push(like.user_id);
+        likesByPost.set(like.post_id, likes);
+      });
+      (commentsResult.data || []).forEach(comment => {
+        commentsByPost.set(comment.post_id, (commentsByPost.get(comment.post_id) || 0) + 1);
+      });
+      (sharesResult.data || []).forEach(share => {
+        sharesByPost.set(share.post_id, (sharesByPost.get(share.post_id) || 0) + 1);
+      });
+
+      posts.forEach(post => {
+        const likes = likesByPost.get(post.id) || [];
+        post.engagement = {
+          likes: likes.length,
+          liked: likes.includes(currentProfileUser?.id),
+          comments: commentsByPost.get(post.id) || 0,
+          shares: sharesByPost.get(post.id) || 0
+        };
+      });
+    }
+
+    function createPostCard(post) {
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -683,6 +724,103 @@
       border-radius: 6px;
       object-fit: contain;
       background: #000;
+    }
+
+    .post-engagement-stats,
+    .post-engagement-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 4px;
+      border-top: 1px solid var(--kc-border);
+      color: var(--kc-text-muted);
+      font-size: 13px;
+    }
+
+    .post-engagement-actions {
+      justify-content: stretch;
+      padding: 4px 0;
+    }
+
+    .post-engagement-actions button {
+      display: flex;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-width: 0;
+      min-height: 40px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--kc-text-muted);
+      font: inherit;
+      font-weight: 600;
+    }
+
+    .post-engagement-actions button:hover,
+    .post-engagement-actions button[aria-expanded="true"] {
+      background: var(--kc-input-bg);
+    }
+
+    .post-engagement-actions .post-like-button[aria-pressed="true"] {
+      color: var(--kc-blue);
+    }
+
+    .post-engagement-actions button:disabled {
+      cursor: wait;
+      opacity: 0.6;
+    }
+
+    .post-comments-panel {
+      display: grid;
+      gap: 10px;
+      padding: 12px 0 4px;
+      border-top: 1px solid var(--kc-border);
+    }
+
+    .post-comments-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .post-comment {
+      padding: 9px 11px;
+      border-radius: 8px;
+      background: var(--kc-input-bg);
+      overflow-wrap: anywhere;
+    }
+
+    .post-comment-author {
+      margin-bottom: 3px;
+      color: var(--kc-text-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .post-comment-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .post-comment-form input {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 9px 11px;
+      border: 1px solid var(--kc-border);
+      border-radius: 18px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .post-comment-form button {
+      width: 40px;
+      min-width: 40px;
+      border-radius: 50%;
+      background: var(--kc-blue);
+      color: #fff;
     }
 
     /* ==========================================================================
@@ -2059,15 +2197,6 @@
             Le réseau connecté de Bunia et de l’Ituri. Partagez vos statuts, vos vidéos et échangez avec vos contacts.
           </div>
           <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800" class="post-media">
-          <div class="post-stats">
-            <div><i class="fa-solid fa-thumbs-up" style="color:var(--kc-blue);"></i> 1.4k personnes</div>
-            <div>342 commentaires • 120 partages</div>
-          </div>
-          <div class="post-footer-actions">
-            <div class="action-btn"><i class="fa-regular fa-thumbs-up"></i> J'aime</div>
-            <div class="action-btn"><i class="fa-regular fa-comment"></i> Commenter</div>
-            <div class="action-btn"><i class="fa-solid fa-share"></i> Partager</div>
-          </div>
         </div>
 
       </section>
@@ -2952,7 +3081,210 @@
         }
         card.appendChild(media);
       }
+
+      const engagement = post.engagement || { likes: 0, liked: false, comments: 0, shares: 0 };
+      const stats = document.createElement('div');
+      stats.className = 'post-engagement-stats';
+      const likeCount = document.createElement('span');
+      likeCount.className = 'post-like-count';
+      likeCount.textContent = `${engagement.likes} J’aime`;
+      const activityCount = document.createElement('span');
+      activityCount.className = 'post-activity-count';
+      activityCount.textContent = `${engagement.comments} commentaire${engagement.comments === 1 ? '' : 's'} · ${engagement.shares} partage${engagement.shares === 1 ? '' : 's'}`;
+      stats.append(likeCount, activityCount);
+      card.appendChild(stats);
+
+      const actions = document.createElement('div');
+      actions.className = 'post-engagement-actions';
+      const likeButton = document.createElement('button');
+      likeButton.type = 'button';
+      likeButton.className = 'post-like-button';
+      likeButton.setAttribute('aria-pressed', String(engagement.liked));
+      likeButton.innerHTML = '<i class="fa-regular fa-thumbs-up" aria-hidden="true"></i><span>J’aime</span>';
+      likeButton.addEventListener('click', () => togglePostLike(post, card, likeButton));
+
+      const commentButton = document.createElement('button');
+      commentButton.type = 'button';
+      commentButton.className = 'post-comment-button';
+      commentButton.setAttribute('aria-expanded', 'false');
+      commentButton.innerHTML = '<i class="fa-regular fa-comment" aria-hidden="true"></i><span>Commenter</span>';
+      commentButton.addEventListener('click', () => togglePostComments(post, card, commentButton));
+
+      const shareButton = document.createElement('button');
+      shareButton.type = 'button';
+      shareButton.className = 'post-share-button';
+      shareButton.innerHTML = '<i class="fa-solid fa-share" aria-hidden="true"></i><span>Partager</span>';
+      shareButton.addEventListener('click', () => sharePost(post, card, shareButton));
+      actions.append(likeButton, commentButton, shareButton);
+      card.appendChild(actions);
+
+      const commentsPanel = document.createElement('section');
+      commentsPanel.className = 'post-comments-panel';
+      commentsPanel.hidden = true;
+      commentsPanel.setAttribute('aria-label', 'Commentaires de la publication');
+      const commentsList = document.createElement('div');
+      commentsList.className = 'post-comments-list';
+      const commentForm = document.createElement('form');
+      commentForm.className = 'post-comment-form';
+      const commentInput = document.createElement('input');
+      commentInput.type = 'text';
+      commentInput.maxLength = 1000;
+      commentInput.placeholder = 'Écrire un commentaire…';
+      commentInput.setAttribute('aria-label', 'Écrire un commentaire');
+      commentInput.required = true;
+      const commentSubmit = document.createElement('button');
+      commentSubmit.type = 'submit';
+      commentSubmit.setAttribute('aria-label', 'Envoyer le commentaire');
+      commentSubmit.innerHTML = '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i>';
+      commentForm.append(commentInput, commentSubmit);
+      commentForm.addEventListener('submit', event => submitPostComment(event, post, card, commentForm, commentsList));
+      commentsPanel.append(commentsList, commentForm);
+      card.appendChild(commentsPanel);
       return card;
+    }
+
+    async function togglePostLike(post, card, button) {
+      if (!currentProfileUser || !supabaseAuthClient) return;
+      button.disabled = true;
+      const wasLiked = button.getAttribute('aria-pressed') === 'true';
+      try {
+        const result = wasLiked
+          ? await supabaseAuthClient.from('post_likes').delete().eq('post_id', post.id).eq('user_id', currentProfileUser.id)
+          : await supabaseAuthClient.from('post_likes').insert({ post_id: post.id, user_id: currentProfileUser.id });
+        if (result.error) throw result.error;
+        button.setAttribute('aria-pressed', String(!wasLiked));
+        const count = card.querySelector('.post-like-count');
+        const likes = Math.max(0, Number.parseInt(count.textContent, 10) + (wasLiked ? -1 : 1));
+        count.textContent = `${likes} J’aime`;
+      } catch (error) {
+        console.error('Erreur J’aime:', error.message || error);
+        setPostEngagementNotice(card, 'Impossible d’enregistrer le J’aime. Vérifiez les règles Supabase.');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function togglePostComments(post, card, button) {
+      const panel = card.querySelector('.post-comments-panel');
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      button.setAttribute('aria-expanded', String(willOpen));
+      if (!willOpen || panel.dataset.loaded === 'true') return;
+
+      const list = panel.querySelector('.post-comments-list');
+      const loading = document.createElement('p');
+      loading.className = 'inbox-empty';
+      loading.textContent = 'Chargement des commentaires…';
+      list.replaceChildren(loading);
+      try {
+        let result = await supabaseAuthClient.from('post_comments')
+          .select('id, user_id, content, created_at, profiles(full_name, avatar_url)')
+          .eq('post_id', post.id)
+          .order('created_at', { ascending: true });
+        if (result.error) {
+          result = await supabaseAuthClient.from('post_comments')
+            .select('id, user_id, content, created_at')
+            .eq('post_id', post.id)
+            .order('created_at', { ascending: true });
+        }
+        if (result.error) throw result.error;
+        result.data.forEach(comment => appendPostComment(list, comment));
+        if (!result.data.length) {
+          const empty = document.createElement('p');
+          empty.className = 'inbox-empty';
+          empty.textContent = 'Aucun commentaire pour le moment.';
+          list.appendChild(empty);
+        }
+        panel.dataset.loaded = 'true';
+      } catch (error) {
+        list.replaceChildren();
+        setPostEngagementNotice(card, 'Impossible de charger les commentaires. Vérifiez la configuration Supabase.');
+      }
+    }
+
+    function appendPostComment(list, comment) {
+      const row = document.createElement('article');
+      row.className = 'post-comment';
+      const author = document.createElement('p');
+      author.className = 'post-comment-author';
+      const profile = Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles;
+      author.textContent = profile?.full_name || (comment.user_id === currentProfileUser?.id
+        ? [currentProfileUser.user_metadata?.prenom, currentProfileUser.user_metadata?.nom].filter(Boolean).join(' ') || currentProfileUser.email
+        : 'Membre KundeConnect');
+      const body = document.createElement('p');
+      body.textContent = comment.content;
+      row.append(author, body);
+      list.appendChild(row);
+    }
+
+    async function submitPostComment(event, post, card, form, list) {
+      event.preventDefault();
+      if (!currentProfileUser || !supabaseAuthClient) return;
+      const input = form.querySelector('input');
+      const button = form.querySelector('button');
+      const content = input.value.trim();
+      if (!content) return;
+      button.disabled = true;
+      try {
+        const { data, error } = await supabaseAuthClient.from('post_comments')
+          .insert({ post_id: post.id, user_id: currentProfileUser.id, content })
+          .select('id, user_id, content, created_at')
+          .single();
+        if (error) throw error;
+        list.querySelector('.inbox-empty')?.remove();
+        appendPostComment(list, data);
+        input.value = '';
+        const count = card.querySelector('.post-activity-count');
+        const nextCount = Number.parseInt(count.textContent, 10) + 1;
+        const shares = Number.parseInt(count.textContent.match(/·\s*(\d+)/)?.[1] || '0', 10);
+        count.textContent = `${nextCount} commentaire${nextCount === 1 ? '' : 's'} · ${shares} partage${shares === 1 ? '' : 's'}`;
+      } catch (error) {
+        console.error('Erreur commentaire:', error.message || error);
+        setPostEngagementNotice(card, 'Impossible d’envoyer le commentaire. Réessayez.');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function sharePost(post, card, button) {
+      const postUrl = new URL(window.location.href);
+      postUrl.hash = 'feed';
+      const shareData = { title: 'KUNDE CONNECT', text: post.content || 'Publication KundeConnect', url: postUrl.href };
+      button.disabled = true;
+      try {
+        if (navigator.share) await navigator.share(shareData);
+        else if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(shareData.url);
+        else throw new Error('Le partage n’est pas pris en charge sur cet appareil.');
+
+        const { error } = await supabaseAuthClient.from('post_shares').insert({
+          post_id: post.id,
+          user_id: currentProfileUser.id
+        });
+        if (error) throw error;
+        const count = card.querySelector('.post-activity-count');
+        const comments = Number.parseInt(count.textContent, 10);
+        const shares = Number.parseInt(count.textContent.match(/·\s*(\d+)/)?.[1] || '0', 10) + 1;
+        count.textContent = `${comments} commentaire${comments === 1 ? '' : 's'} · ${shares} partage${shares === 1 ? '' : 's'}`;
+        if (!navigator.share) setPostEngagementNotice(card, 'Lien copié dans le presse-papiers.');
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Erreur partage:', error.message || error);
+          setPostEngagementNotice(card, error.message || 'Impossible de partager cette publication.');
+        }
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function setPostEngagementNotice(card, message) {
+      let notice = card.querySelector('.post-engagement-notice');
+      if (!notice) {
+        notice = document.createElement('p');
+        notice.className = 'post-engagement-notice';
+        notice.setAttribute('role', 'status');
+        card.appendChild(notice);
+      }
+      notice.textContent = message;
     }
 
     async function loadFeedPosts() {
@@ -2962,6 +3294,8 @@
       feedContainer.replaceChildren();
       try {
         const posts = await fetchPosts();
+        if (requestId !== feedPostRequestId) return;
+        await loadPostEngagement(posts);
         if (requestId !== feedPostRequestId) return;
         if (posts.length === 0) {
           const emptyState = document.createElement('p');
@@ -3046,6 +3380,7 @@
         if (!result.post) throw new Error('Supabase n’a pas renvoyé le post créé.');
 
         const feedContainer = document.getElementById('feed-posts-container');
+        await loadPostEngagement([result.post]);
         feedPostRequestId++;
         feedContainer.querySelectorAll('.inbox-empty').forEach(notice => notice.remove());
         feedContainer.prepend(createPostCard(result.post));

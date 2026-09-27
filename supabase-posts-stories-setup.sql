@@ -125,3 +125,64 @@ CREATE POLICY kundeconnect_media_delete_own
       AND (storage.foldername(name))[2] = (SELECT auth.uid()::text)
     )
   );
+
+CREATE TABLE IF NOT EXISTS public.post_likes (
+  post_id uuid NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+  PRIMARY KEY (post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.post_comments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id uuid NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content text NOT NULL CHECK (char_length(trim(content)) BETWEEN 1 AND 1000),
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE TABLE IF NOT EXISTS public.post_shares (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id uuid NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS post_likes_post_id_idx ON public.post_likes(post_id);
+CREATE INDEX IF NOT EXISTS post_comments_post_created_idx ON public.post_comments(post_id, created_at);
+CREATE INDEX IF NOT EXISTS post_shares_post_id_idx ON public.post_shares(post_id);
+
+ALTER TABLE public.post_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.post_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.post_shares ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, DELETE ON TABLE public.post_likes TO authenticated;
+GRANT SELECT, INSERT, DELETE ON TABLE public.post_comments TO authenticated;
+GRANT SELECT, INSERT ON TABLE public.post_shares TO authenticated;
+
+DROP POLICY IF EXISTS kundeconnect_post_likes_read ON public.post_likes;
+CREATE POLICY kundeconnect_post_likes_read
+  ON public.post_likes FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS kundeconnect_post_likes_insert_own ON public.post_likes;
+CREATE POLICY kundeconnect_post_likes_insert_own
+  ON public.post_likes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS kundeconnect_post_likes_delete_own ON public.post_likes;
+CREATE POLICY kundeconnect_post_likes_delete_own
+  ON public.post_likes FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS kundeconnect_post_comments_read ON public.post_comments;
+CREATE POLICY kundeconnect_post_comments_read
+  ON public.post_comments FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS kundeconnect_post_comments_insert_own ON public.post_comments;
+CREATE POLICY kundeconnect_post_comments_insert_own
+  ON public.post_comments FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS kundeconnect_post_comments_delete_own ON public.post_comments;
+CREATE POLICY kundeconnect_post_comments_delete_own
+  ON public.post_comments FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS kundeconnect_post_shares_read ON public.post_shares;
+CREATE POLICY kundeconnect_post_shares_read
+  ON public.post_shares FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS kundeconnect_post_shares_insert_own ON public.post_shares;
+CREATE POLICY kundeconnect_post_shares_insert_own
+  ON public.post_shares FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
