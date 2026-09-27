@@ -2570,6 +2570,7 @@
     let postPreviewUrl = '';
     let storyPreviewUrl = '';
     let feedStories = [];
+    let feedPostRequestId = 0;
 
     function setPostStatus(message, isError = false) {
       const status = document.getElementById('postComposerStatus');
@@ -2649,7 +2650,7 @@
       try {
         const joinedResult = await supabaseAuthClient
           .from('posts')
-          .select('*, profiles (id, username, full_name, avatar_url)')
+          .select('*, profiles (id, full_name, avatar_url)')
           .order('created_at', { ascending: false });
         if (!joinedResult.error) return joinedResult.data || [];
 
@@ -2672,24 +2673,16 @@
     async function fetchStories() {
       if (!supabaseAuthClient) return [];
       try {
-        const joinedResult = await supabaseAuthClient
-          .from('stories')
-          .select('*, profiles (id, username, full_name, avatar_url)')
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false });
-        if (!joinedResult.error) return joinedResult.data || [];
-
-        console.error('Erreur chargement stories:', joinedResult.error.message);
-        const simpleResult = await supabaseAuthClient
+        const result = await supabaseAuthClient
           .from('stories')
           .select('*')
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false });
-        if (simpleResult.error) {
-          console.error('Erreur fallback stories:', simpleResult.error.message);
-          throw simpleResult.error;
+        if (result.error) {
+          console.error('Erreur chargement stories:', result.error.message);
+          throw result.error;
         }
-        return simpleResult.data || [];
+        return result.data || [];
       } catch (error) {
         console.error('Erreur inattendue lors du chargement des stories:', error);
         throw error;
@@ -2965,9 +2958,11 @@
     async function loadFeedPosts() {
       const feedContainer = document.getElementById('feed-posts-container');
       if (!feedContainer || !supabaseAuthClient || !currentProfileUser) return;
+      const requestId = ++feedPostRequestId;
       feedContainer.replaceChildren();
       try {
         const posts = await fetchPosts();
+        if (requestId !== feedPostRequestId) return;
         if (posts.length === 0) {
           const emptyState = document.createElement('p');
           emptyState.className = 'inbox-empty';
@@ -2977,6 +2972,7 @@
         }
         posts.forEach(post => feedContainer.appendChild(createPostCard(post)));
       } catch (error) {
+        if (requestId !== feedPostRequestId) return;
         const notice = document.createElement('p');
         notice.className = 'inbox-empty';
         notice.textContent = 'Impossible de charger les publications. Vérifiez la table posts et ses règles d’accès Supabase.';
@@ -3050,6 +3046,8 @@
         if (!result.post) throw new Error('Supabase n’a pas renvoyé le post créé.');
 
         const feedContainer = document.getElementById('feed-posts-container');
+        feedPostRequestId++;
+        feedContainer.querySelectorAll('.inbox-empty').forEach(notice => notice.remove());
         feedContainer.prepend(createPostCard(result.post));
         closePostModal();
       } catch (error) {
