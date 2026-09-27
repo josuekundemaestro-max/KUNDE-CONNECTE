@@ -1123,6 +1123,18 @@
       font-size: 15px;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .auth-btn-submit {
       width: 100%;
       padding: 12px;
@@ -1251,21 +1263,21 @@
       <p style="color: var(--kc-text-muted); font-size: 14px; margin-bottom: 20px;">Connectez-vous pour rejoindre votre
         communauté</p>
 
-      <form onsubmit="handleLogin(event)">
-        <input type="text" placeholder="Numéro de téléphone ou adresse e-mail" required>
-        <input type="password" placeholder="Mot de passe" required>
-        <button type="submit" class="auth-btn-submit">Se connecter</button>
+      <form id="authForm" onsubmit="handleLogin(event)">
+        <label for="authEmail" class="sr-only">Adresse e-mail</label>
+        <input id="authEmail" type="email" autocomplete="email" placeholder="Adresse e-mail" required>
+        <label for="authPassword" class="sr-only">Mot de passe</label>
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required>
+        <button id="authSubmitButton" type="submit" class="auth-btn-submit" disabled>Se connecter</button>
       </form>
 
-      <p style="color:var(--kc-text-muted); font-size:12px; margin-top:12px;">Mode démo local : les messages ne sont pas transmis à d’autres comptes.</p>
-      <button type="button" class="auth-btn-submit" style="background:#FFFFFF; color:var(--kc-blue); border:1px solid var(--kc-blue);" onclick="handleLogin()">Continuer en mode démo</button>
+      <p id="authStatus" role="status" aria-live="polite" style="color:var(--kc-text-muted); font-size:13px; margin-top:12px;">Vérification de la configuration d’authentification…</p>
 
-      <a href="#" class="forgot-pwd" onclick="alert('Un lien de réinitialisation vous a été envoyé par SMS/Email.')">Mot
-        de passe oublié ?</a>
+      <a href="#" class="forgot-pwd" onclick="resetPassword(event)">Mot de passe oublié ?</a>
       <div class="sidebar-divider"></div>
-      <button
+      <button id="authModeButton" type="button"
         style="background: var(--kc-green); color: white; padding: 10px 16px; font-weight: bold; border-radius: 6px; margin-top: 10px;"
-        onclick="handleLogin(event)">Créer un nouveau compte</button>
+        onclick="toggleAuthMode()">Créer un nouveau compte</button>
     </div>
   </div>
 
@@ -1771,7 +1783,179 @@
   <!-- ==========================================================================
        LOGIQUE JAVASCRIPT
        ========================================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // Use the Supabase project URL and publishable/anon key only; never expose a service_role key here.
+    const SUPABASE_URL = 'https://dspjajlxgdhkfcejmqvq.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_U7X5ki0dEqG7fMFEIdn_-w_Yp0wWQZ_';
+    let supabaseAuthClient = null;
+    let authMode = 'login';
+
+    function setAuthStatus(message, isError = false) {
+      const status = document.getElementById('authStatus');
+      status.textContent = message;
+      status.style.color = isError ? '#b91c1c' : 'var(--kc-text-muted)';
+    }
+
+    function setAuthenticated(session) {
+      document.getElementById('authModal').style.display = session ? 'none' : 'flex';
+      document.body.dataset.authenticated = session ? 'true' : 'false';
+      document.querySelectorAll('.kc-header, .main-wrapper, #inboxModal, #chatModal, #groupModal, #callModal')
+        .forEach(element => { element.inert = !session; });
+    }
+
+    function enterAuthenticatedApp(session) {
+      if (!session) {
+        setAuthenticated(null);
+        return;
+      }
+      setAuthenticated(session);
+      switchTab('feed');
+      if (window.location.hash !== '#feed') window.location.hash = 'feed';
+    }
+
+    function getAuthErrorMessage(error, mode) {
+      if (error?.code === 'email_not_confirmed' || /email not confirmed/i.test(error?.message || '')) {
+        return 'Votre adresse e-mail n’est pas encore confirmée. Ouvrez le lien reçu par e-mail, puis réessayez.';
+      }
+      if (mode === 'login') {
+        return 'Connexion refusée par Supabase. Vérifiez l’adresse e-mail et le mot de passe, puis confirmez que le compte existe dans ce projet.';
+      }
+      return error?.message || 'Supabase n’a pas pu créer ce compte. Vérifiez les informations et la configuration Email.';
+    }
+
+    async function initializeAuth() {
+      const isConfigured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL)
+        && !SUPABASE_URL.includes('YOUR_PROJECT_ID')
+        && SUPABASE_ANON_KEY.length > 20
+        && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_');
+      if (!isConfigured) {
+        document.getElementById('authSubmitButton').disabled = true;
+        document.getElementById('authModeButton').disabled = true;
+        setAuthStatus('Connexion bloquée : configurez l’URL du projet Supabase et sa clé publique dans index.html.', true);
+        setAuthenticated(null);
+        return;
+      }
+
+      if (!window.supabase?.createClient) {
+        document.getElementById('authSubmitButton').disabled = true;
+        document.getElementById('authModeButton').disabled = true;
+        setAuthStatus('Le service d’authentification Supabase est indisponible. Vérifiez votre connexion Internet.', true);
+        setAuthenticated(null);
+        return;
+      }
+
+      try {
+        supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        const { data, error } = await supabaseAuthClient.auth.getSession();
+        if (error) throw error;
+        enterAuthenticatedApp(data.session);
+        setAuthStatus(data.session ? `Connecté : ${data.session.user.email}` : 'Connectez-vous avec un compte KundeConnect enregistré.');
+        supabaseAuthClient.auth.onAuthStateChange((_event, session) => setAuthenticated(session));
+        document.getElementById('authSubmitButton').disabled = false;
+      } catch (error) {
+        enterAuthenticatedApp(null);
+        document.getElementById('authSubmitButton').disabled = !supabaseAuthClient;
+        setAuthStatus('Impossible de vérifier la session auprès de Supabase. Vérifiez la connexion et réessayez.', true);
+      }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      if (!supabaseAuthClient) {
+        setAuthStatus('Connexion bloquée : l’authentification Supabase n’est pas configurée.', true);
+        return;
+      }
+
+      const email = document.getElementById('authEmail').value.trim().toLowerCase();
+      const password = document.getElementById('authPassword').value;
+      const submitButton = document.getElementById('authSubmitButton');
+      submitButton.disabled = true;
+      setAuthStatus(authMode === 'login' ? 'Vérification du compte…' : 'Création du compte…');
+      try {
+        if (authMode === 'signup') {
+          const { data, error } = await supabaseAuthClient.auth.signUp({ email, password });
+          if (error) throw error;
+          if (data.session) {
+            enterAuthenticatedApp(data.session);
+            setAuthStatus('Compte créé et connecté.');
+          } else {
+            toggleAuthMode();
+            setAuthStatus('Inscription enregistrée. Consultez votre e-mail pour confirmer le compte avant de vous connecter.');
+          }
+          return;
+        }
+
+        const { data, error } = await supabaseAuthClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          enterAuthenticatedApp(null);
+          const message = getAuthErrorMessage(error, 'login');
+          setAuthStatus(message, true);
+          alert(`Erreur de connexion : ${message}`);
+          return;
+        }
+        if (!data.session) {
+          enterAuthenticatedApp(null);
+          const message = 'Supabase n’a renvoyé aucune session. Vérifiez la confirmation de votre compte et réessayez.';
+          setAuthStatus(message, true);
+          alert(`Erreur de connexion : ${message}`);
+          return;
+        }
+        enterAuthenticatedApp(data.session);
+        setAuthStatus('Connexion réussie.');
+      } catch (error) {
+        enterAuthenticatedApp(null);
+        const message = getAuthErrorMessage(error, authMode);
+        setAuthStatus(message, true);
+        if (authMode === 'login') alert(`Erreur de connexion : ${message}`);
+      } finally {
+        submitButton.disabled = !supabaseAuthClient;
+      }
+    }
+
+    function toggleAuthMode() {
+      if (!supabaseAuthClient) {
+        setAuthStatus('Inscription bloquée : configurez d’abord Supabase Auth.', true);
+        return;
+      }
+      authMode = authMode === 'login' ? 'signup' : 'login';
+      document.getElementById('authSubmitButton').textContent = authMode === 'login' ? 'Se connecter' : 'Créer le compte';
+      document.getElementById('authModeButton').textContent = authMode === 'login' ? 'Créer un nouveau compte' : 'J’ai déjà un compte';
+      document.getElementById('authPassword').autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
+      document.getElementById('authPassword').minLength = authMode === 'signup' ? 8 : 1;
+      setAuthStatus(authMode === 'login' ? 'Connectez-vous avec un compte déjà enregistré.' : 'Créez un compte avec une adresse e-mail valide et un mot de passe d’au moins 8 caractères.');
+    }
+
+    async function resetPassword(event) {
+      event.preventDefault();
+      const emailInput = document.getElementById('authEmail');
+      if (!emailInput.reportValidity()) return;
+      if (!supabaseAuthClient) {
+        setAuthStatus('Réinitialisation indisponible : configurez d’abord Supabase Auth.', true);
+        return;
+      }
+
+      const { error } = await supabaseAuthClient.auth.resetPasswordForEmail(emailInput.value.trim().toLowerCase(), {
+        redirectTo: window.location.href.split('#')[0]
+      });
+      setAuthStatus(error ? 'Impossible d’envoyer le lien de réinitialisation.' : 'Si ce compte existe, un lien de réinitialisation va être envoyé.');
+    }
+
+    async function handleLogout() {
+      if (!supabaseAuthClient) {
+        setAuthenticated(null);
+        return;
+      }
+      const { error } = await supabaseAuthClient.auth.signOut();
+      if (error) {
+        setAuthStatus('La déconnexion a échoué. Réessayez.', true);
+        return;
+      }
+      setAuthenticated(null);
+      setAuthStatus('Vous êtes déconnecté.');
+    }
     const colorPalettes = {
       night: {
         bg: '#0B0F19', card: '#111827', nav: '#0F172A', text: '#F9FAFB', muted: '#9CA3AF',
@@ -1865,16 +2049,6 @@
       if (activeNavTab) {
         activeNavTab.classList.add('active');
       }
-    }
-
-    // Gestion Authentification
-    function handleLogin(e) {
-      if (e) e.preventDefault();
-      document.getElementById('authModal').style.display = 'none';
-    }
-
-    function handleLogout() {
-      document.getElementById('authModal').style.display = 'flex';
     }
 
     // Gestion des conversations et des groupes
@@ -2282,6 +2456,7 @@
       document.getElementById('callMicrophoneIcon').className = 'fa-solid fa-microphone';
       document.getElementById('callModal').style.display = 'none';
     }
+    initializeAuth();
   </script>
 
 </body>
