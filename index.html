@@ -568,6 +568,60 @@
       font-weight: 700;
     }
 
+    .profile-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-settings {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      font-size: 17px;
+    }
+
+    .btn-settings:hover {
+      background: var(--kc-border);
+    }
+
+    .settings-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 15px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .settings-list button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      text-align: left;
+    }
+
+    .settings-list button:hover {
+      background: var(--kc-active);
+    }
+
+    .settings-list .logout-item {
+      color: #ef4444;
+      font-weight: 700;
+    }
+
     .profile-tabs {
       display: flex;
       gap: 4px;
@@ -1782,9 +1836,14 @@
         <header class="profile-header">
           <div class="profile-info">
             <h2 id="user-display-name">Mon profil</h2>
-            <button type="button" class="btn-edit-profile" onclick="openEditModal()">
-              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Modifier le profil
-            </button>
+            <div class="profile-actions">
+              <button type="button" class="btn-edit-profile" onclick="openEditModal()">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Modifier le profil
+              </button>
+              <button type="button" class="btn-settings" onclick="openSettingsModal()" title="Paramètres" aria-label="Paramètres">
+                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -2148,6 +2207,22 @@
     </form>
   </div>
 
+  <div id="settings-modal" class="profile-edit-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" onclick="if (event.target === this) closeSettingsModal()">
+    <section class="profile-edit-dialog settings-dialog">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <h2 id="settingsTitle"><i class="fa-solid fa-gear" aria-hidden="true"></i> Paramètres du compte</h2>
+        <button type="button" class="inbox-close" aria-label="Fermer les paramètres" onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <ul class="settings-list">
+        <li><button type="button" onclick="showSettingsNotice('Confidentialité et sécurité')"><i class="fa-solid fa-lock" aria-hidden="true"></i> Confidentialité et sécurité</button></li>
+        <li><button type="button" onclick="closeSettingsModal(); openNotifications()"><i class="fa-solid fa-bell" aria-hidden="true"></i> Gestion des notifications</button></li>
+        <li><button type="button" onclick="closeSettingsModal(); switchTab('settings')"><i class="fa-solid fa-language" aria-hidden="true"></i> Langue et affichage</button></li>
+        <li><button type="button" class="logout-item" onclick="closeSettingsModal(); handleLogout()"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Déconnexion</button></li>
+      </ul>
+      <p id="settingsStatus" role="status" aria-live="polite" style="margin-top:12px; color:var(--kc-text-muted);"></p>
+    </section>
+  </div>
+
   <div class="group-modal" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupDialogTitle">
     <form class="group-dialog" onsubmit="createGroup(event)">
       <h2 id="groupDialogTitle">Groupes</h2>
@@ -2248,6 +2323,20 @@
       document.getElementById('edit-profile-modal').classList.remove('open');
     }
 
+    function openSettingsModal() {
+      if (!currentProfileUser) return;
+      document.getElementById('settingsStatus').textContent = '';
+      document.getElementById('settings-modal').classList.add('open');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('open');
+    }
+
+    function showSettingsNotice(optionName) {
+      document.getElementById('settingsStatus').textContent = `${optionName} : cette rubrique sera disponible avec les paramètres de compte.`;
+    }
+
     async function saveProfile(event) {
       event.preventDefault();
       if (!currentProfileUser || !supabaseAuthClient) {
@@ -2333,7 +2422,7 @@
       avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
-      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal')
+      document.querySelectorAll('.kc-header, .main-wrapper, .bottom-nav, #notificationsModal, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal, #settings-modal')
         .forEach(element => { element.inert = !session; });
       updateStoryAvatar(session?.user || null);
       renderProfile(session?.user || null);
