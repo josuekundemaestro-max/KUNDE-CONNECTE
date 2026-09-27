@@ -532,6 +532,175 @@
       padding: 4px 0;
     }
 
+    .profile-page {
+      padding-bottom: 24px;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: flex-end;
+      min-height: 150px;
+      padding: 22px;
+      border-bottom: 1px solid var(--kc-border);
+      background: var(--kc-card);
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .profile-info h2 {
+      overflow-wrap: anywhere;
+      font-size: 26px;
+    }
+
+    .btn-edit-profile,
+    .profile-save-button {
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: var(--kc-blue);
+      color: var(--kc-accent-text, #FFFFFF);
+      font-weight: 700;
+    }
+
+    .profile-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--kc-border);
+      overflow-x: auto;
+    }
+
+    .profile-tab-button {
+      flex: 0 0 auto;
+      padding: 12px 16px;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: var(--kc-text-muted);
+      font-weight: 600;
+    }
+
+    .profile-tab-button.active {
+      border-bottom-color: var(--kc-blue);
+      color: var(--kc-blue);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-card {
+      padding: 16px;
+      border: 1px solid var(--kc-border);
+      border-radius: 8px;
+      background: var(--kc-card);
+    }
+
+    .info-card h3 {
+      margin-bottom: 10px;
+      font-size: 17px;
+    }
+
+    .info-card p + p {
+      margin-top: 8px;
+    }
+
+    .badge-category {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--kc-active);
+      color: var(--kc-blue);
+      font-weight: 600;
+    }
+
+    .empty-msg {
+      padding: 32px 16px;
+      color: var(--kc-text-muted);
+      text-align: center;
+    }
+
+    .profile-edit-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 3900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .profile-edit-modal.open {
+      display: flex;
+    }
+
+    .profile-edit-dialog {
+      position: relative;
+      width: min(100%, 500px);
+      max-height: min(90vh, 760px);
+      overflow-y: auto;
+      padding: 22px;
+      border-radius: 8px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      box-shadow: var(--kc-shadow);
+    }
+
+    .profile-edit-dialog h2 {
+      margin-bottom: 16px;
+    }
+
+    .profile-edit-dialog label {
+      display: block;
+      margin: 12px 0 5px;
+      color: var(--kc-text-muted);
+      font-size: 14px;
+    }
+
+    .profile-edit-dialog input,
+    .profile-edit-dialog textarea,
+    .profile-edit-dialog select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .profile-edit-dialog textarea {
+      resize: vertical;
+    }
+
+    .profile-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .profile-modal-actions button {
+      padding: 10px 14px;
+      border-radius: 6px;
+    }
+
+    .profile-cancel-button {
+      background: var(--kc-input-bg);
+      color: var(--kc-text);
+    }
+
     /* ==========================================================================
       FENÊTRE MODALE DE MESSAGERIE KUNDECONNECT
        ========================================================================== */
@@ -1401,7 +1570,7 @@
           style="position:absolute; top:-2px; right:-2px; background:#e41e3f; color:white; font-size:10px; padding:2px 5px; border-radius:10px;">5</span>
       </div>
       <img id="user-header-avatar" src="kundeimg.JPG" class="user-avatar-header"
-        title="Votre Profil" onclick="switchTab('settings')">
+        title="Votre Profil" onclick="switchTab('profile')">
     </div>
   </header>
 
@@ -1412,7 +1581,7 @@
 
     <!-- COLONNE GAUCHE (MENU ACCÈS RAPIDE) -->
     <aside class="sidebar-left">
-      <div class="menu-item-sidebar" onclick="switchTab('settings')">
+      <div class="menu-item-sidebar" onclick="switchTab('profile')">
         <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
           style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
         <span>Ir. KUNDE Josué <i class="fa-solid fa-circle-check verified-badge"></i></span>
@@ -1524,6 +1693,50 @@
           </div>
         </div>
 
+      </section>
+
+      <section id="page-profile" class="page-section profile-page">
+        <header class="profile-header">
+          <div class="profile-info">
+            <h2 id="user-display-name">Mon profil</h2>
+            <button type="button" class="btn-edit-profile" onclick="openEditModal()">
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Modifier le profil
+            </button>
+          </div>
+        </header>
+
+        <nav class="profile-tabs" aria-label="Contenu du profil">
+          <button type="button" class="profile-tab-button active" data-profile-tab="tous" onclick="switchProfileTab('tous')">Tous</button>
+          <button type="button" class="profile-tab-button" data-profile-tab="reels" onclick="switchProfileTab('reels')">Reels</button>
+          <button type="button" class="profile-tab-button" data-profile-tab="photos" onclick="switchProfileTab('photos')">Photos</button>
+          <button type="button" class="profile-tab-button" data-profile-tab="evenements" onclick="switchProfileTab('evenements')">Évènements</button>
+        </nav>
+
+        <div class="tab-content-container">
+          <div id="tab-tous" class="tab-content active">
+            <article class="info-card">
+              <h3>Bio</h3>
+              <p id="profile-bio">Bienvenue sur mon profil KundeConnect !</p>
+            </article>
+            <article class="info-card">
+              <h3><i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Détails épinglés</h3>
+              <p id="profile-pinned">Ajoutez une information à votre profil.</p>
+            </article>
+            <article class="info-card">
+              <h3><i class="fa-solid fa-tag" aria-hidden="true"></i> Catégorie</h3>
+              <span class="badge-category" id="profile-category">Créateur digital</span>
+            </article>
+            <article class="info-card">
+              <h3>Informations personnelles</h3>
+              <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> <strong>Localisation :</strong> <span id="profile-location">Non renseignée</span></p>
+              <p><i class="fa-solid fa-house" aria-hidden="true"></i> <strong>Ville d’origine :</strong> <span id="profile-hometown">Non renseignée</span></p>
+              <p><i class="fa-solid fa-cake-candles" aria-hidden="true"></i> <strong>Date de naissance :</strong> <span id="profile-dob">Non renseignée</span></p>
+            </article>
+          </div>
+          <div id="tab-reels" class="tab-content"><p class="empty-msg">Aucun Reel pour le moment.</p></div>
+          <div id="tab-photos" class="tab-content"><p class="empty-msg">Aucune photo pour le moment.</p></div>
+          <div id="tab-evenements" class="tab-content"><p class="empty-msg">Aucun évènement à venir.</p></div>
+        </div>
       </section>
 
       <!-- ONGLET 2: AMIS / RECHERCHE DE CONTACTS -->
@@ -1757,6 +1970,7 @@
       <div class="chat-header-user">
         <img id="chatUserImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100">
         <div>
+
           <strong id="chatUserName" style="font-size:14px; display:block;">MAKISANZA KUNDE Josué</strong>
           <span id="chatSubtitle" style="font-size:11px; opacity:0.8;">Conversation privée</span>
         </div>
@@ -1791,6 +2005,32 @@
         <button type="button" title="Envoyer le message" aria-label="Envoyer le message" style="color:var(--kc-blue);" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>
+  </div>
+
+  <div id="edit-profile-modal" class="profile-edit-modal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle" onclick="if (event.target === this) closeEditModal()">
+    <form class="profile-edit-dialog" onsubmit="saveProfile(event)">
+      <h2 id="editProfileTitle">Modifier le profil</h2>
+      <label for="edit-bio">Bio</label>
+      <textarea id="edit-bio" rows="3" maxlength="300"></textarea>
+      <label for="edit-pinned">Détails épinglés</label>
+      <input type="text" id="edit-pinned" maxlength="120">
+      <label for="edit-category">Catégorie</label>
+      <select id="edit-category">
+        <option value="Créateur digital">Créateur digital</option>
+        <option value="Créateur avec IA">Créateur avec IA</option>
+      </select>
+      <label for="edit-location">Localisation</label>
+      <input type="text" id="edit-location" maxlength="120">
+      <label for="edit-hometown">Ville d’origine</label>
+      <input type="text" id="edit-hometown" maxlength="120">
+      <label for="edit-dob">Date de naissance</label>
+      <input type="date" id="edit-dob">
+      <p id="profileEditStatus" role="status" aria-live="polite" style="margin-top:10px; color:var(--kc-text-muted);"></p>
+      <div class="profile-modal-actions">
+        <button type="button" class="profile-cancel-button" onclick="closeEditModal()">Annuler</button>
+        <button type="submit" class="profile-save-button">Enregistrer</button>
+      </div>
+    </form>
   </div>
 
   <div class="group-modal" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupDialogTitle">
@@ -1843,6 +2083,91 @@
     let supabaseAuthClient = null;
     let authMode = 'login';
     let avatarRequestId = 0;
+    let currentProfileUser = null;
+
+    function switchProfileTab(tabName) {
+      document.querySelectorAll('.profile-tab-button').forEach(button => {
+        button.classList.toggle('active', button.dataset.profileTab === tabName);
+      });
+      document.querySelectorAll('.tab-content').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+      });
+    }
+
+    function renderProfile(user) {
+      currentProfileUser = user || null;
+      const metadata = user?.user_metadata || {};
+      const displayName = [metadata.prenom, metadata.postnom, metadata.nom].filter(Boolean).join(' ')
+        || user?.email
+        || 'Mon profil';
+      document.getElementById('user-display-name').textContent = displayName;
+      document.getElementById('profile-bio').textContent = metadata.profile_bio || 'Bienvenue sur mon profil KundeConnect !';
+      document.getElementById('profile-pinned').textContent = metadata.profile_pinned || 'Ajoutez une information à votre profil.';
+      document.getElementById('profile-category').textContent = metadata.profile_category || 'Créateur digital';
+      document.getElementById('profile-location').textContent = metadata.profile_location || 'Non renseignée';
+      document.getElementById('profile-hometown').textContent = metadata.profile_hometown || metadata.lieu_de_naissance || 'Non renseignée';
+      const dateOfBirth = metadata.profile_dob || metadata.date_de_naissance;
+      document.getElementById('profile-dob').textContent = dateOfBirth
+        ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${dateOfBirth}T00:00:00Z`))
+        : 'Non renseignée';
+    }
+
+    function openEditModal() {
+      if (!currentProfileUser || !supabaseAuthClient) {
+        setAuthStatus('Connectez-vous pour modifier votre profil.', true);
+        return;
+      }
+      const metadata = currentProfileUser.user_metadata || {};
+      document.getElementById('edit-bio').value = metadata.profile_bio || '';
+      document.getElementById('edit-pinned').value = metadata.profile_pinned || '';
+      document.getElementById('edit-category').value = metadata.profile_category || 'Créateur digital';
+      document.getElementById('edit-location').value = metadata.profile_location || '';
+      document.getElementById('edit-hometown').value = metadata.profile_hometown || metadata.lieu_de_naissance || '';
+      document.getElementById('edit-dob').value = metadata.profile_dob || metadata.date_de_naissance || '';
+      document.getElementById('edit-dob').max = new Date().toISOString().slice(0, 10);
+      document.getElementById('profileEditStatus').textContent = '';
+      document.getElementById('edit-profile-modal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-profile-modal').classList.remove('open');
+    }
+
+    async function saveProfile(event) {
+      event.preventDefault();
+      if (!currentProfileUser || !supabaseAuthClient) {
+        document.getElementById('profileEditStatus').textContent = 'Votre session a expiré. Reconnectez-vous avant d’enregistrer.';
+        return;
+      }
+
+      const saveButton = document.querySelector('.profile-save-button');
+      const status = document.getElementById('profileEditStatus');
+      saveButton.disabled = true;
+      status.textContent = 'Enregistrement du profil…';
+      const updatedMetadata = {
+        ...currentProfileUser.user_metadata,
+        profile_bio: document.getElementById('edit-bio').value.trim(),
+        profile_pinned: document.getElementById('edit-pinned').value.trim(),
+        profile_category: document.getElementById('edit-category').value,
+        profile_location: document.getElementById('edit-location').value.trim(),
+        profile_hometown: document.getElementById('edit-hometown').value.trim(),
+        profile_dob: document.getElementById('edit-dob').value
+      };
+
+      try {
+        const { data, error } = await supabaseAuthClient.auth.updateUser({ data: updatedMetadata });
+        if (error) throw error;
+        if (!data.user) throw new Error('Supabase n’a pas renvoyé le profil mis à jour.');
+        currentProfileUser = data.user;
+        renderProfile(data.user);
+        status.textContent = 'Profil enregistré.';
+        closeEditModal();
+      } catch (error) {
+        status.textContent = error.message || 'Impossible d’enregistrer le profil. Réessayez.';
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
 
     function updateStoryAvatar(user) {
       const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || DEFAULT_AVATAR_URL;
@@ -1893,9 +2218,10 @@
       avatarRequestId++;
       document.getElementById('authModal').style.display = session ? 'none' : 'flex';
       document.body.dataset.authenticated = session ? 'true' : 'false';
-      document.querySelectorAll('.kc-header, .main-wrapper, #inboxModal, #chatModal, #groupModal, #callModal')
+      document.querySelectorAll('.kc-header, .main-wrapper, #inboxModal, #chatModal, #groupModal, #callModal, #edit-profile-modal')
         .forEach(element => { element.inert = !session; });
       updateStoryAvatar(session?.user || null);
+      renderProfile(session?.user || null);
     }
 
     function enterAuthenticatedApp(session) {
