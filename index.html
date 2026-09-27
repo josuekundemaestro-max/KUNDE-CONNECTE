@@ -1630,6 +1630,32 @@
       background: var(--kc-blue-hover);
     }
 
+    .google-auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 44px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--kc-border);
+      border-radius: 6px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .google-auth-btn:hover:not(:disabled) {
+      background: var(--kc-input-bg);
+    }
+
+    .google-auth-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .forgot-pwd {
       display: block;
       margin: 12px 0;
@@ -1851,6 +1877,11 @@
         </div>
         <button id="authSubmitButton" type="submit" class="auth-btn-submit" disabled>Se connecter</button>
       </form>
+
+      <button id="googleAuthButton" type="button" class="google-auth-btn" onclick="handleGoogleLogin()" disabled>
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" width="20" height="20">
+        Se connecter avec Google
+      </button>
 
       <p id="authStatus" role="status" aria-live="polite" style="color:var(--kc-text-muted); font-size:13px; margin-top:12px;">Vérification de la configuration d’authentification…</p>
 
@@ -2629,12 +2660,12 @@
           .order('created_at', { ascending: false });
         if (simpleResult.error) {
           console.error('Erreur fallback posts:', simpleResult.error.message);
-          return [];
+          throw simpleResult.error;
         }
         return simpleResult.data || [];
       } catch (error) {
         console.error('Erreur inattendue lors du chargement des posts:', error);
-        return [];
+        throw error;
       }
     }
 
@@ -2656,12 +2687,12 @@
           .order('created_at', { ascending: false });
         if (simpleResult.error) {
           console.error('Erreur fallback stories:', simpleResult.error.message);
-          return [];
+          throw simpleResult.error;
         }
         return simpleResult.data || [];
       } catch (error) {
         console.error('Erreur inattendue lors du chargement des stories:', error);
-        return [];
+        throw error;
       }
     }
 
@@ -2726,6 +2757,12 @@
       try {
         const stories = await fetchStories();
         renderFeedStories(stories);
+        if (stories.length === 0) {
+          const emptyState = document.createElement('span');
+          emptyState.className = 'inbox-empty';
+          emptyState.textContent = 'Aucune story disponible pour le moment.';
+          container.appendChild(emptyState);
+        }
       } catch (error) {
         const notice = document.createElement('span');
         notice.className = 'inbox-empty';
@@ -2931,6 +2968,13 @@
       feedContainer.replaceChildren();
       try {
         const posts = await fetchPosts();
+        if (posts.length === 0) {
+          const emptyState = document.createElement('p');
+          emptyState.className = 'inbox-empty';
+          emptyState.textContent = 'Aucune publication pour le moment. Soyez le premier à publier.';
+          feedContainer.appendChild(emptyState);
+          return;
+        }
         posts.forEach(post => feedContainer.appendChild(createPostCard(post)));
       } catch (error) {
         const notice = document.createElement('p');
@@ -3227,6 +3271,7 @@
         && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_');
       if (!isConfigured) {
         document.getElementById('authSubmitButton').disabled = true;
+        document.getElementById('googleAuthButton').disabled = true;
         document.getElementById('authModeButton').disabled = true;
         setAuthStatus('Connexion bloquée : configurez l’URL du projet Supabase et sa clé publique dans index.html.', true);
         setAuthenticated(null);
@@ -3235,6 +3280,7 @@
 
       if (!window.supabase?.createClient) {
         document.getElementById('authSubmitButton').disabled = true;
+        document.getElementById('googleAuthButton').disabled = true;
         document.getElementById('authModeButton').disabled = true;
         setAuthStatus('Le service d’authentification Supabase est indisponible. Vérifiez votre connexion Internet.', true);
         setAuthenticated(null);
@@ -3258,10 +3304,35 @@
           }
         });
         document.getElementById('authSubmitButton').disabled = false;
+        document.getElementById('googleAuthButton').disabled = false;
       } catch (error) {
         enterAuthenticatedApp(null);
         document.getElementById('authSubmitButton').disabled = !supabaseAuthClient;
+        document.getElementById('googleAuthButton').disabled = !supabaseAuthClient;
         setAuthStatus('Impossible de vérifier la session auprès de Supabase. Vérifiez la connexion et réessayez.', true);
+      }
+    }
+
+    async function handleGoogleLogin() {
+      const googleButton = document.getElementById('googleAuthButton');
+      if (!supabaseAuthClient) {
+        setAuthStatus('Connexion Google indisponible : l’authentification Supabase n’est pas configurée.', true);
+        return;
+      }
+
+      googleButton.disabled = true;
+      setAuthStatus('Redirection vers Google…');
+      try {
+        const { error } = await supabaseAuthClient.auth.signInWithOAuth({
+          provider: 'google'
+        });
+        if (error) throw error;
+      } catch (error) {
+        const message = /unsupported provider|provider is not enabled/i.test(error.message || '')
+          ? 'Google n’est pas encore activé dans Supabase. Activez Google dans Auth → Providers, puis réessayez.'
+          : error.message || 'La connexion avec Google a échoué. Réessayez.';
+        setAuthStatus(message, true);
+        googleButton.disabled = false;
       }
     }
 
