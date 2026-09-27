@@ -141,6 +141,10 @@ CREATE TABLE IF NOT EXISTS public.post_comments (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
+ALTER TABLE public.post_comments
+  ADD COLUMN IF NOT EXISTS parent_comment_id uuid
+  REFERENCES public.post_comments(id) ON DELETE CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.post_shares (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id uuid NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
@@ -150,6 +154,7 @@ CREATE TABLE IF NOT EXISTS public.post_shares (
 
 CREATE INDEX IF NOT EXISTS post_likes_post_id_idx ON public.post_likes(post_id);
 CREATE INDEX IF NOT EXISTS post_comments_post_created_idx ON public.post_comments(post_id, created_at);
+CREATE INDEX IF NOT EXISTS post_comments_parent_created_idx ON public.post_comments(parent_comment_id, created_at);
 CREATE INDEX IF NOT EXISTS post_shares_post_id_idx ON public.post_shares(post_id);
 
 ALTER TABLE public.post_likes ENABLE ROW LEVEL SECURITY;

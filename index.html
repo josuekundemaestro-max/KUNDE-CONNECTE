@@ -792,6 +792,55 @@
       overflow-wrap: anywhere;
     }
 
+    .post-comment-thread {
+      display: grid;
+      gap: 7px;
+    }
+
+    .post-comment-replies {
+      display: grid;
+      gap: 7px;
+      margin-left: 18px;
+      padding-left: 10px;
+      border-left: 2px solid var(--kc-border);
+    }
+
+    .post-comment-reply-button {
+      margin-top: 6px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--kc-blue);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .post-comment-reply-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 7px;
+    }
+
+    .post-comment-reply-form input {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid var(--kc-border);
+      border-radius: 18px;
+      background: var(--kc-card);
+      color: var(--kc-text);
+      font: inherit;
+    }
+
+    .post-comment-reply-form button {
+      width: 36px;
+      min-width: 36px;
+      border-radius: 50%;
+      background: var(--kc-blue);
+      color: #fff;
+    }
+
     .post-comment-author {
       margin-bottom: 3px;
       color: var(--kc-text-muted);
@@ -3041,6 +3090,7 @@
     function createPostCard(post) {
       const card = document.createElement('article');
       card.className = 'feed-post-card';
+      card.id = `post-${post.id}`;
       const author = document.createElement('p');
       author.className = 'feed-post-meta';
       const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
@@ -3178,17 +3228,26 @@
       list.replaceChildren(loading);
       try {
         let result = await supabaseAuthClient.from('post_comments')
-          .select('id, user_id, content, created_at, profiles(full_name, avatar_url)')
+          .select('id, user_id, parent_comment_id, content, created_at, profiles(full_name, avatar_url)')
           .eq('post_id', post.id)
           .order('created_at', { ascending: true });
         if (result.error) {
           result = await supabaseAuthClient.from('post_comments')
-            .select('id, user_id, content, created_at')
+            .select('id, user_id, parent_comment_id, content, created_at')
             .eq('post_id', post.id)
             .order('created_at', { ascending: true });
         }
         if (result.error) throw result.error;
-        result.data.forEach(comment => appendPostComment(list, comment));
+        const commentsByParent = new Map();
+        result.data.forEach(comment => {
+          const parentId = comment.parent_comment_id || null;
+          const comments = commentsByParent.get(parentId) || [];
+          comments.push(comment);
+          commentsByParent.set(parentId, comments);
+        });
+        (commentsByParent.get(null) || []).forEach(comment => {
+          appendPostComment(list, comment, post, card, commentsByParent, 0);
+        });
         if (!result.data.length) {
           const empty = document.createElement('p');
           empty.className = 'inbox-empty';
@@ -3202,7 +3261,9 @@
       }
     }
 
-    function appendPostComment(list, comment) {
+    function appendPostComment(list, comment, post, card, commentsByParent, depth) {
+      const thread = document.createElement('div');
+      thread.className = 'post-comment-thread';
       const row = document.createElement('article');
       row.className = 'post-comment';
       const author = document.createElement('p');
@@ -3213,11 +3274,50 @@
         : 'Membre KundeConnect');
       const body = document.createElement('p');
       body.textContent = comment.content;
-      row.append(author, body);
-      list.appendChild(row);
+      const replyButton = document.createElement('button');
+      replyButton.type = 'button';
+      replyButton.className = 'post-comment-reply-button';
+      replyButton.textContent = 'Répondre';
+      replyButton.setAttribute('aria-expanded', 'false');
+      const replyForm = createPostCommentForm(`Répondre à ${author.textContent}…`);
+      replyForm.hidden = true;
+      replyForm.addEventListener('submit', event => submitPostComment(
+        event, post, card, replyForm, replies, comment.id, depth + 1
+      ));
+      replyButton.addEventListener('click', () => {
+        replyForm.hidden = !replyForm.hidden;
+        replyButton.setAttribute('aria-expanded', String(!replyForm.hidden));
+        if (!replyForm.hidden) replyForm.querySelector('input').focus();
+      });
+      row.append(author, body, replyButton, replyForm);
+
+      const replies = document.createElement('div');
+      replies.className = 'post-comment-replies';
+      thread.append(row, replies);
+      list.appendChild(thread);
+      (commentsByParent.get(comment.id) || []).forEach(reply => {
+        appendPostComment(replies, reply, post, card, commentsByParent, depth + 1);
+      });
     }
 
-    async function submitPostComment(event, post, card, form, list) {
+    function createPostCommentForm(placeholder) {
+      const form = document.createElement('form');
+      form.className = 'post-comment-form post-comment-reply-form';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 1000;
+      input.placeholder = placeholder;
+      input.setAttribute('aria-label', placeholder);
+      input.required = true;
+      const submit = document.createElement('button');
+      submit.type = 'submit';
+      submit.setAttribute('aria-label', 'Envoyer la réponse');
+      submit.innerHTML = '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i>';
+      form.append(input, submit);
+      return form;
+    }
+
+    async function submitPostComment(event, post, card, form, list, parentCommentId = null, depth = 0) {
       event.preventDefault();
       if (!currentProfileUser || !supabaseAuthClient) return;
       const input = form.querySelector('input');
@@ -3227,12 +3327,13 @@
       button.disabled = true;
       try {
         const { data, error } = await supabaseAuthClient.from('post_comments')
-          .insert({ post_id: post.id, user_id: currentProfileUser.id, content })
-          .select('id, user_id, content, created_at')
+          .insert({ post_id: post.id, user_id: currentProfileUser.id, content, parent_comment_id: parentCommentId })
+          .select('id, user_id, parent_comment_id, content, created_at')
           .single();
         if (error) throw error;
         list.querySelector('.inbox-empty')?.remove();
-        appendPostComment(list, data);
+        const commentsByParent = new Map([[null, parentCommentId ? [] : [data]]]);
+        appendPostComment(list, data, post, card, commentsByParent, depth);
         input.value = '';
         const count = card.querySelector('.post-activity-count');
         const nextCount = Number.parseInt(count.textContent, 10) + 1;
@@ -3248,7 +3349,7 @@
 
     async function sharePost(post, card, button) {
       const postUrl = new URL(window.location.href);
-      postUrl.hash = 'feed';
+      postUrl.hash = `post-${post.id}`;
       const shareData = { title: 'KUNDE CONNECT', text: post.content || 'Publication KundeConnect', url: postUrl.href };
       button.disabled = true;
       try {
@@ -3305,6 +3406,12 @@
           return;
         }
         posts.forEach(post => feedContainer.appendChild(createPostCard(post)));
+        const sharedPostMatch = window.location.hash.match(/^#post-([0-9a-f-]+)$/i);
+        if (sharedPostMatch) {
+          requestAnimationFrame(() => {
+            document.getElementById(`post-${sharedPostMatch[1]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        }
       } catch (error) {
         if (requestId !== feedPostRequestId) return;
         const notice = document.createElement('p');
@@ -3553,7 +3660,8 @@
       }
       setAuthenticated(session);
       switchTab('feed');
-      if (window.location.hash !== '#feed') window.location.hash = 'feed';
+      const isSharedPostLink = /^#post-[0-9a-f-]+$/i.test(window.location.hash);
+      if (!isSharedPostLink && window.location.hash !== '#feed') window.location.hash = 'feed';
       loadFeedPosts();
       refreshStoryAvatar();
       loadFeedStories();
